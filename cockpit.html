@@ -1,0 +1,2378 @@
+
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ventilator Cockpit — Clinical ICU Simulator</title>
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: #334155;
+      border-radius: 10px;
+    }
+    input[type='range'] {
+      -webkit-appearance: none;
+      appearance: none;
+      background: #0f172a;
+      height: 6px;
+      border-radius: 999px;
+      border: 1px solid #334155;
+    }
+    input[type='range']::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #06b6d4;
+      cursor: pointer;
+      border: 2px solid #cffafe;
+      box-shadow: 0 0 6px rgba(6, 182, 212, 0.6);
+    }
+    input[type='range']::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #06b6d4;
+      cursor: pointer;
+      border: 2px solid #cffafe;
+      box-shadow: 0 0 6px rgba(6, 182, 212, 0.6);
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-200 font-sans antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
+  <!-- MAIN APP CONTAINER -->
+  <div id="app-root" class="min-h-screen transition-colors duration-500 bg-slate-950 p-2 sm:p-3 lg:p-4 flex flex-col">
+    
+    <!-- COMPACT HEADER / STATUS & SCENARIO BAR -->
+    <header
+      id="main-header"
+      class="mb-3 rounded-xl p-3 sm:p-4 border-2 shadow-lg flex flex-col lg:flex-row gap-3 justify-between items-start lg:items-center bg-slate-900 border-slate-700 transition-colors"
+    >
+      <div class="flex-1 min-w-0">
+        <div class="flex flex-wrap items-center gap-2 mb-1">
+          <!-- Dynamic Header Icon -->
+          <span id="header-icon-container" class="shrink-0 text-blue-400">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+          </span>
+
+          <h1 id="header-title" class="text-base sm:text-xl font-bold text-white uppercase tracking-wider">
+            Ventilator Cockpit
+          </h1>
+
+          <!-- Guidelines Button -->
+          <button
+            id="btn-guidelines"
+            type="button"
+            class="flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-cyan-300 px-2.5 py-1 rounded-lg border border-slate-600 transition-colors font-semibold"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+            Guidelines
+          </button>
+
+          <!-- Audio Mute / Unmute Toggle -->
+          <button
+            id="btn-audio-toggle"
+            type="button"
+            aria-label="Toggle monitor and auto-alarm audio"
+            class="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border transition-colors font-semibold bg-emerald-950/80 border-emerald-600/70 text-emerald-300 hover:bg-emerald-900/60"
+          >
+            <span id="audio-icon">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+              </svg>
+            </span>
+            <span id="audio-label">Auto-Alarm ON</span>
+          </button>
+        </div>
+
+        <p id="status-msg" class="text-xs sm:text-sm font-medium text-slate-300">
+          All ventilator settings are reset to 0 (nil). Select a ventilation mode and dial your settings.
+        </p>
+      </div>
+
+      <!-- Scenario Selector (10 Cases) & Reset -->
+      <div class="flex flex-col sm:flex-row lg:flex-col gap-1.5 w-full lg:w-80 shrink-0">
+        <select
+          id="scenario-select"
+          aria-label="Select Clinical Scenario"
+          class="w-full bg-slate-800 border border-slate-600 text-cyan-100 px-2.5 py-2 rounded-lg text-xs sm:text-sm font-semibold cursor-pointer outline-none"
+        ></select>
+
+        <button
+          id="btn-reset-all"
+          type="button"
+          class="font-bold py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-colors shadow-sm text-xs shrink-0 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          Reset All to 0 (Nil)
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN COMPACT COCKPIT GRID -->
+    <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 relative">
+      
+      <!-- FATAL OVERLAY (Hidden unless fatal outcome occurs) -->
+      <div
+        id="fatal-overlay"
+        class="hidden absolute inset-0 z-30 bg-red-950/60 backdrop-blur-[2px] rounded-2xl flex items-center justify-center p-4"
+      >
+        <div class="bg-red-900 border-4 border-red-500 text-white p-6 sm:p-8 rounded-2xl text-center shadow-2xl max-w-md">
+          <svg class="w-16 h-16 mx-auto mb-3 animate-bounce" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="9" cy="12" r="1"></circle>
+            <circle cx="15" cy="12" r="1"></circle>
+            <path d="M8 20v2h8v-2"></path>
+            <path d="m12.5 17-.5-1-.5 1h1z"></path>
+            <path d="M16 20a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20"></path>
+          </svg>
+          <h2 class="text-2xl sm:text-3xl font-black uppercase tracking-widest mb-2">
+            Patient Deceased
+          </h2>
+          <p class="text-sm sm:text-base font-medium text-red-100 mb-5">
+            Lethal ventilator complication occurred. Review the debriefing to understand the mechanism.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              id="btn-fatal-report"
+              type="button"
+              class="bg-slate-900 hover:bg-slate-800 text-white font-semibold px-4 py-2 rounded-lg border border-red-400 transition-colors text-sm"
+            >
+              Review Error Report
+            </button>
+            <button
+              id="btn-fatal-retry"
+              type="button"
+              class="bg-red-600 hover:bg-red-500 text-white font-bold px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- LEFT COLUMN: Scenario Briefing, Ventilator Alarms & Physiological Monitor -->
+      <section class="lg:col-span-7 flex flex-col gap-3 sm:gap-4">
+        
+        <!-- Scenario Case Card -->
+        <div class="bg-slate-900 border border-slate-700 rounded-xl p-3 sm:p-4 shadow-md flex flex-col">
+          <div class="flex flex-wrap justify-between items-center gap-2 mb-2 border-b border-slate-800 pb-2">
+            <div>
+              <h2 id="scenario-title" class="text-sm sm:text-base font-bold text-slate-100">
+                Scenario 1: Severe ARDS (70kg Male)
+              </h2>
+              <span id="scenario-meta" class="text-[11px] font-mono text-cyan-400">
+                PBW: 70 kg | Drive: Apneic / Sedated
+              </span>
+            </div>
+            <button
+              id="btn-hint"
+              type="button"
+              class="flex items-center gap-1.5 bg-blue-900/40 hover:bg-blue-900/60 text-blue-300 border border-blue-700 px-3 py-1.5 rounded-lg transition-colors text-xs font-semibold"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+              Guidance &amp; Hint
+            </button>
+          </div>
+          <p id="scenario-desc" class="text-slate-300 text-xs sm:text-sm leading-relaxed"></p>
+        </div>
+
+        <!-- Bedside Vitals & Ventilator Alarm Monitor -->
+        <div class="bg-black border-2 border-slate-800 rounded-2xl p-3 flex flex-col gap-2.5 shadow-2xl relative overflow-hidden">
+          
+          <!-- Active Ventilator Alarm Strip -->
+          <div
+            id="alarm-banner"
+            class="rounded-xl px-2.5 py-2 border flex flex-wrap items-center justify-between gap-2 transition-colors bg-slate-900/90 border-slate-800 text-emerald-400"
+          >
+            <div class="flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-wider shrink-0">
+              <svg id="alarm-icon" class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+              <span id="alarm-title">ALARMS NORMAL</span>
+            </div>
+            <div id="alarm-pills" class="flex flex-wrap items-center gap-1.5">
+              <span class="text-[10px] font-mono text-emerald-300/90">
+                Ppeak, Pplat, Vt &amp; SpO₂ within safe limits
+              </span>
+            </div>
+          </div>
+
+          <!-- Telemetry Header -->
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <svg
+                id="beat-indicator"
+                class="w-4 h-4 transition-transform duration-100 text-green-500"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+              </svg>
+              <h3 class="text-slate-400 font-semibold tracking-widest text-xs uppercase">
+                Telemetry &amp; Scalar Waveforms
+              </h3>
+            </div>
+            <button
+              id="btn-last-eval"
+              type="button"
+              class="hidden text-[11px] font-semibold text-cyan-400 hover:text-cyan-300 underline"
+            >
+              Last Evaluation
+            </button>
+          </div>
+
+          <!-- Live Scalar Waveform Header Bar -->
+          <div class="w-full flex flex-col gap-1.5">
+            <div class="flex flex-wrap items-center justify-between gap-1.5 text-[11px] font-mono bg-slate-900/90 border border-slate-800 rounded-lg px-2.5 py-1.5">
+              <div class="flex flex-wrap items-center gap-2.5">
+                <span class="text-green-400 font-semibold">● ECG</span>
+                <span class="text-yellow-400 font-semibold">● Paw (cmH₂O)</span>
+                <span class="text-sky-400 font-semibold">● Vol (mL)</span>
+              </div>
+              <div class="flex flex-wrap items-center gap-2 text-[10px]">
+                <span id="wave-tite-badge" class="text-amber-400 font-bold">STANDBY (ALL 0)</span>
+                <span
+                  id="wave-autopeep-badge"
+                  class="hidden bg-amber-950 text-amber-300 border border-amber-600/70 px-1.5 py-0.5 rounded font-bold animate-pulse"
+                >
+                  ⚠ Auto-PEEP +0.0
+                </span>
+              </div>
+            </div>
+
+            <!-- Compact Multi-Channel Ventilator Canvas -->
+            <div class="w-full h-48 sm:h-56 bg-[#090d16] rounded-xl border border-slate-800 overflow-hidden relative shadow-inner">
+              <div class="absolute top-1 left-14 z-10 pointer-events-none text-[9px] font-mono text-green-400/90 uppercase tracking-wider">
+                ECG Lead II
+              </div>
+              <div class="absolute top-[13%] left-14 right-2 z-10 pointer-events-none flex justify-between items-center text-[10px] font-mono">
+                <span class="text-yellow-400 font-bold uppercase">Paw (cmH₂O)</span>
+                <span id="canvas-paw-overlay" class="text-yellow-300/90 bg-black/70 px-1.5 py-0.5 rounded border border-yellow-500/30">
+                  Ppeak:0 | Pplat:0
+                </span>
+              </div>
+              <div class="absolute top-[56.5%] left-14 right-2 z-10 pointer-events-none flex justify-between items-center text-[10px] font-mono">
+                <span class="text-sky-400 font-bold uppercase">Volume (mL)</span>
+                <span id="canvas-vol-overlay" class="text-sky-300/90 bg-black/70 px-1.5 py-0.5 rounded border border-sky-500/30">
+                  Vt:0mL | Trap:0mL
+                </span>
+              </div>
+
+              <canvas id="ventilator-canvas" class="w-full h-full block"></canvas>
+            </div>
+          </div>
+
+          <!-- Compact Digital Vitals Grid -->
+          <div class="grid grid-cols-3 sm:grid-cols-5 gap-2">
+            <div id="box-hr" class="bg-slate-900/90 border border-slate-800 rounded-lg px-2.5 py-2 flex flex-col justify-between transition-colors">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">HR</span>
+              </div>
+              <div id="val-hr" class="text-lg sm:text-2xl font-mono font-black leading-tight my-0.5 text-green-500">135</div>
+              <span class="text-[10px] font-mono text-slate-500">bpm</span>
+            </div>
+
+            <div id="box-spo2" class="bg-slate-900/90 border border-slate-800 rounded-lg px-2.5 py-2 flex flex-col justify-between transition-colors">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">SpO2</span>
+                <span id="dot-spo2" class="hidden w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span>
+              </div>
+              <div id="val-spo2" class="text-lg sm:text-2xl font-mono font-black leading-tight my-0.5 text-cyan-400">80</div>
+              <span class="text-[10px] font-mono text-slate-500">%</span>
+            </div>
+
+            <div id="box-bp" class="bg-slate-900/90 border border-slate-800 rounded-lg px-2.5 py-2 flex flex-col justify-between transition-colors">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">BP</span>
+              </div>
+              <div id="val-bp" class="text-lg sm:text-2xl font-mono font-black leading-tight my-0.5 text-red-400">90/60</div>
+              <span class="text-[10px] font-mono text-slate-500">mmHg</span>
+            </div>
+
+            <div id="box-ppeak" class="bg-slate-900/90 border border-slate-800 rounded-lg px-2.5 py-2 flex flex-col justify-between transition-colors">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Ppeak</span>
+                <span id="dot-ppeak" class="hidden w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span>
+              </div>
+              <div id="val-ppeak" class="text-lg sm:text-2xl font-mono font-black leading-tight my-0.5 text-yellow-500">45</div>
+              <span class="text-[10px] font-mono text-slate-500">cmH2O</span>
+            </div>
+
+            <div id="box-pplat" class="bg-slate-900/90 border border-slate-800 rounded-lg px-2.5 py-2 flex flex-col justify-between transition-colors">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Pplat</span>
+                <span id="dot-pplat" class="hidden w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span>
+              </div>
+              <div id="val-pplat" class="text-lg sm:text-2xl font-mono font-black leading-tight my-0.5 text-yellow-600">38</div>
+              <span class="text-[10px] font-mono text-slate-500">cmH2O</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT COLUMN: Compact Ventilator Controls -->
+      <section class="lg:col-span-5 bg-slate-900 border border-slate-700 rounded-xl p-3 sm:p-4 shadow-lg flex flex-col h-full z-10">
+        <div class="flex items-center justify-between mb-2.5 border-b border-slate-800 pb-2">
+          <div class="flex items-center gap-1.5">
+            <svg class="w-5 h-5 text-cyan-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"></path>
+              <path d="M9.6 4.6A2 2 0 1 1 11 8H2"></path>
+              <path d="M12.6 19.4A2 2 0 1 0 14 16H2"></path>
+            </svg>
+            <h2 class="text-base sm:text-lg font-bold text-slate-100 uppercase tracking-wider">
+              Ventilator Controls
+            </h2>
+          </div>
+          <span
+            id="mode-badge"
+            class="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-800 text-cyan-300 border border-slate-700"
+          >
+            MODE: UNSET (0)
+          </span>
+        </div>
+
+        <!-- Calculated Telemetry Bar (Educational Aid) -->
+        <div class="grid grid-cols-2 gap-2 mb-3 bg-slate-950/80 border border-slate-800 rounded-lg px-2.5 py-2 text-[11px] font-mono">
+          <div class="flex flex-col">
+            <span id="calc-label-1" class="text-slate-500 uppercase text-[10px]">Vt / PBW Ratio</span>
+            <span id="calc-val-1" class="text-cyan-300 font-bold text-xs">0.0 mL/kg</span>
+          </div>
+          <div class="flex flex-col">
+            <span id="calc-label-2" class="text-slate-500 uppercase text-[10px]">Minute Vent (VE)</span>
+            <span id="calc-val-2" class="text-cyan-300 font-bold text-xs">0.0 L/min</span>
+          </div>
+        </div>
+
+        <!-- Controls Grid -->
+        <div id="controls-container" class="flex-1 grid grid-cols-2 gap-2.5 mb-3 overflow-y-auto pr-0.5 custom-scrollbar">
+          <!-- Mode Selector Card -->
+          <div
+            id="mode-card"
+            class="col-span-2 p-2.5 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col justify-between"
+          >
+            <div class="flex justify-between items-center mb-1.5">
+              <span class="text-slate-400 font-semibold text-[11px] uppercase tracking-wider">
+                Ventilation Mode
+              </span>
+              <span id="mode-subtext" class="text-[10px] font-mono text-slate-400">
+                Select Mode
+              </span>
+            </div>
+            <div class="grid grid-cols-4 gap-1.5" id="mode-buttons">
+              <button
+                type="button"
+                data-mode="VCV"
+                class="mode-btn py-2 rounded-lg text-xs sm:text-sm font-bold transition-colors border bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-slate-200"
+              >
+                VCV
+              </button>
+              <button
+                type="button"
+                data-mode="PCV"
+                class="mode-btn py-2 rounded-lg text-xs sm:text-sm font-bold transition-colors border bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-slate-200"
+              >
+                PCV
+              </button>
+              <button
+                type="button"
+                data-mode="CPAP"
+                class="mode-btn py-2 rounded-lg text-xs sm:text-sm font-bold transition-colors border bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-slate-200"
+              >
+                CPAP
+              </button>
+              <button
+                type="button"
+                data-mode="BiPAP"
+                class="mode-btn py-2 rounded-lg text-xs sm:text-sm font-bold transition-colors border bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-slate-200"
+              >
+                BiPAP
+              </button>
+            </div>
+          </div>
+
+          <!-- Dynamic Dials Container -->
+          <div id="dynamic-dials" class="col-span-2 grid grid-cols-2 gap-2.5"></div>
+        </div>
+
+        <!-- Apply & Evaluate Button -->
+        <button
+          id="btn-apply"
+          type="button"
+          class="w-full py-3 rounded-xl font-black text-sm sm:text-base tracking-widest uppercase transition-all shadow-lg flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-cyan-900/50 active:scale-[0.98]"
+        >
+          <svg id="apply-icon" class="w-5 h-5 text-white animate-pulse" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
+            <path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"></path>
+          </svg>
+          <span id="apply-label">Apply &amp; Evaluate</span>
+        </button>
+      </section>
+    </main>
+  </div>
+
+  <!-- REUSABLE MODAL OVERLAY -->
+  <div
+    id="app-modal"
+    class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div
+      id="modal-card"
+      class="w-full max-w-2xl max-h-[85vh] flex flex-col rounded-2xl border-2 shadow-2xl overflow-hidden bg-slate-900 border-blue-500/50"
+    >
+      <div class="flex items-center justify-between px-4 sm:px-5 py-3.5 border-b border-slate-800 bg-black/30">
+        <h3 id="modal-title" class="text-base sm:text-lg font-bold tracking-wide text-blue-400">
+          Modal Title
+        </h3>
+        <button
+          id="btn-modal-close-top"
+          type="button"
+          aria-label="Close modal"
+          class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div id="modal-body" class="p-4 sm:p-5 overflow-y-auto custom-scrollbar text-slate-200"></div>
+
+      <div class="px-4 sm:px-5 py-3 border-t border-slate-800 bg-black/30 flex justify-end">
+        <button
+          id="btn-modal-close-bottom"
+          type="button"
+          class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-100 font-semibold text-xs sm:text-sm border border-slate-600 transition-colors"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPLICATION SCRIPT -->
+  <script>
+    // =========================================================================
+    // 1. CLINICAL SCENARIO DEFINITIONS (10 CASES)
+    // =========================================================================
+    const SCENARIOS = [
+      {
+        id: 1,
+        title: "Scenario 1: Severe ARDS (70kg Male)",
+        patientWeightKg: 70,
+        spontaneousDrive: false,
+        description:
+          "70kg male intubated and sedated for severe viral pneumonia. He has stiff, non-compliant lungs (high peak and plateau pressures) and profound hypoxemia (SpO2 80%).",
+        pathophysiology:
+          "Acute Respiratory Distress Syndrome (ARDS) causes diffuse alveolar damage, pulmonary edema, and surfactant loss. This creates stiff, poorly compliant lungs with widespread alveolar collapse (atelectasis) and severe intrapulmonary shunting.",
+        treatmentGoal:
+          "Invasive ARDSNet Lung-Protective Strategy (VCV/PCV): Use low Tidal Volumes (4–8 mL/kg PBW; target ~6 mL/kg = 420 mL) to prevent volutrauma/barotrauma, combined with higher PEEP (10–16 cmH2O), RR 14–26 bpm, and high FiO2 (≥80%) to recruit collapsed alveoli.",
+        baselineVitals: { spo2: 80, hr: 135, pip: 45, pplat: 38, bp: "90/60" },
+        evaluate: (settings) => {
+          if (settings.mode === 'CPAP' || settings.mode === 'BiPAP') {
+            return {
+              status: 'fatal',
+              msg: "Inadequate Support: Refractory Hypoxemia & Respiratory Arrest",
+              feedback: `This patient is already endotracheally intubated and heavily sedated with severe ARDS. Non-invasive ${settings.mode} cannot overcome severely non-compliant ARDS lungs or guarantee minute ventilation, leading to progressive alveolar collapse and hypoxic cardiac arrest. Use invasive VCV or PCV.`
+            };
+          }
+          if (settings.vt > 600 || settings.peep > 18) {
+            return {
+              status: 'fatal',
+              msg: "Tension Pneumothorax (Severe Barotrauma / Volutrauma)",
+              feedback: `You set Tidal Volume to ${settings.vt} mL (${(settings.vt / 70).toFixed(1)} mL/kg) and PEEP to ${settings.peep} cmH2O. In ARDS, stiff alveoli rupture easily when overdistended, causing air dissection into the pleural space and a fatal tension pneumothorax. Target ~6 mL/kg PBW (~420 mL).`
+            };
+          }
+          if (settings.fio2 < 60 || settings.peep < 8 || settings.vt < 280 || settings.rr < 10) {
+            return {
+              status: 'fatal',
+              msg: "Refractory Hypoxemia & Hypoxic Cardiac Arrest",
+              feedback: `With Vt ${settings.vt} mL, RR ${settings.rr} bpm, PEEP ${settings.peep} cmH2O, and FiO2 ${settings.fio2}%, severe alveolar collapse and shunting persisted, resulting in fatal hypoxic arrest. ARDS requires PEEP 10–16 cmH2O, FiO2 ≥ 80%, and adequate minute ventilation.`
+            };
+          }
+          if (
+            settings.vt >= 350 &&
+            settings.vt <= 450 &&
+            settings.peep >= 10 &&
+            settings.peep <= 16 &&
+            settings.fio2 >= 80 &&
+            settings.rr >= 14 &&
+            settings.rr <= 26
+          ) {
+            return {
+              status: 'success',
+              msg: "ARDSNet Lung-Protective Protocol Applied",
+              feedback: `Excellent management! Tidal Volume of ${settings.vt} mL (~${(settings.vt / 70).toFixed(1)} mL/kg) protects fragile alveoli from volutrauma, while PEEP ${settings.peep} cmH2O and FiO2 ${settings.fio2}% recruit collapsed lung units and restore oxygenation.`
+            };
+          }
+          return {
+            status: 'warning',
+            msg: "Suboptimal Settings: Patient Remains Hypoxic or at Risk of VILI",
+            feedback: `The patient survived, but settings need refinement. For a 70kg ARDS patient on VCV/PCV, target Vt 350–450 mL (~6 mL/kg), PEEP 10–16 cmH2O, FiO2 ≥ 80%, and RR 14–26 bpm.`
+          };
+        }
+      },
+      {
+        id: 2,
+        title: "Scenario 2: Status Asthmaticus (60kg Female)",
+        patientWeightKg: 60,
+        spontaneousDrive: false,
+        description:
+          "60kg female intubated for life-threatening status asthmaticus with severe bronchospasm and critically elevated airway resistance (PIP 55 cmH2O, Pplat 25 cmH2O). High risk of dynamic hyperinflation.",
+        pathophysiology:
+          "Severe bronchoconstriction dramatically increases expiratory airway resistance. Delivering the next breath before the lungs finish emptying traps air (Auto-PEEP / breath stacking), spiking intrathoracic pressure and impairing venous return.",
+        treatmentGoal:
+          "Invasive Obstructive / Permissive Hypercapnia Strategy (VCV/PCV): Prioritize complete lung emptying over normal PaCO2. Use a low Respiratory Rate (10–14 bpm), prolonged expiratory phase (I:E ratio 1:3 or 1:4), moderate Tidal Volume (360–500 mL), and low PEEP (≤ 8 cmH2O).",
+        baselineVitals: { spo2: 88, hr: 140, pip: 55, pplat: 25, bp: "105/70" },
+        evaluate: (settings) => {
+          if (settings.mode === 'CPAP' || settings.mode === 'BiPAP') {
+            return {
+              status: 'fatal',
+              msg: "Contraindicated Mode: Unprotected Airway & Severe Hypoventilation",
+              feedback: `This patient is already intubated for life-threatening status asthmaticus with extreme airway resistance. Non-invasive ${settings.mode} cannot overcome severe bronchospasm, leading to refractory hypercapnia and arrest.`
+            };
+          }
+          if (settings.rr > 16 || settings.ie === '1:1' || settings.ie === '1:2') {
+            return {
+              status: 'fatal',
+              msg: "Severe Auto-PEEP, Breath Stacking & Tension Pneumothorax",
+              feedback: `You set RR to ${settings.rr} bpm with I:E ratio ${settings.ie || 'unset'}. Insufficient expiratory time caused progressive air trapping (Auto-PEEP), compressing venous return to the heart and rupturing hyperinflated alveoli into a fatal tension pneumothorax.`
+            };
+          }
+          if (settings.vt > 600 || settings.peep > 12) {
+            return {
+              status: 'fatal',
+              msg: "Dynamic Hyperinflation & Barotrauma",
+              feedback: `You set Vt to ${settings.vt} mL and PEEP to ${settings.peep} cmH2O. In severe asthma, excessive tidal volumes take too long to exhale and worsen hyperinflation, causing alveolar rupture and cardiovascular collapse.`
+            };
+          }
+          if (settings.vt < 280 || settings.rr < 6 || settings.fio2 < 30) {
+            return {
+              status: 'fatal',
+              msg: "Severe Hypoventilation & Hypoxic Arrest",
+              feedback: `Your dialed minute ventilation or FiO2 (${settings.fio2}%) was too low to sustain gas exchange, causing profound respiratory acidosis and cardiac arrest.`
+            };
+          }
+          if (
+            settings.rr >= 8 &&
+            settings.rr <= 14 &&
+            (settings.ie === '1:3' || settings.ie === '1:4') &&
+            settings.vt >= 350 &&
+            settings.vt <= 520 &&
+            settings.peep <= 8 &&
+            settings.fio2 >= 40
+          ) {
+            return {
+              status: 'success',
+              msg: "Air Trapping Prevented & Hemodynamics Stabilized",
+              feedback: `Outstanding! A low RR (${settings.rr} bpm) and prolonged expiratory phase (${settings.ie}) allowed obstructed airways to empty completely. Auto-PEEP resolved and barotrauma was avoided.`
+            };
+          }
+          return {
+            status: 'warning',
+            msg: "Persistent Risk of Air Trapping (Auto-PEEP)",
+            feedback: `The patient is surviving, but settings need tuning: keep RR low (10–14 bpm), set I:E ratio to 1:3 or 1:4, Vt 360–500 mL, PEEP ≤ 8 cmH2O, and FiO2 ≥ 40%.`
+          };
+        }
+      },
+      {
+        id: 3,
+        title: "Scenario 3: Acute Cardiogenic Pulmonary Edema (75kg Male)",
+        patientWeightKg: 75,
+        spontaneousDrive: true,
+        description:
+          "75kg male in the ED with acute decompensated heart failure and flash pulmonary edema. He is alert, sitting upright, tachypneic (RR 32), coughing pink frothy sputum, with SpO2 81% and BP 165/95 mmHg.",
+        pathophysiology:
+          "Elevated left ventricular filling pressures force fluid into the alveoli, causing severe V/Q mismatch, hypoxemia, and increased work of breathing. Positive end-expiratory pressure recruits fluid-filled alveoli and reduces both LV preload and afterload.",
+        treatmentGoal:
+          "Non-Invasive CPAP Strategy: Because the patient is alert with intact airway reflexes, start CPAP at 8–12 cmH2O with FiO2 60–100%. CPAP splints open flooded alveoli, improves oxygenation, and unloads the failing left ventricle without needing endotracheal intubation.",
+        baselineVitals: { spo2: 81, hr: 128, pip: 14, pplat: 12, bp: "165/95" },
+        evaluate: (settings) => {
+          if (settings.mode === 'VCV' || settings.mode === 'PCV') {
+            if (settings.vt > 650 || settings.peep > 16) {
+              return {
+                status: 'fatal',
+                msg: "Invasive Barotrauma & Hypotensive Collapse",
+                feedback: `Unnecessary invasive ventilation with excessive volume (${settings.vt} mL) or pressure caused barotrauma and acute drop in cardiac output. Alert patients with flash pulmonary edema should be managed first with non-invasive CPAP.`
+              };
+            }
+            return {
+              status: 'warning',
+              msg: "Unnecessary Invasive Mode Selected (Consider CPAP)",
+              feedback: `Although the patient survived, he is alert with intact airway reflexes. Non-invasive CPAP (8–12 cmH2O, FiO2 60–100%) is the evidence-based first-line therapy for cardiogenic pulmonary edema to avoid intubation risks.`
+            };
+          }
+          if (settings.peep > 18 || (settings.mode === 'BiPAP' && settings.ipap > 22)) {
+            return {
+              status: 'fatal',
+              msg: "Severe Preload Reduction, Hypotension & Barotrauma",
+              feedback: `Excessive positive airway pressure (${settings.mode === 'BiPAP' ? `IPAP ${settings.ipap}` : `CPAP ${settings.peep}`} cmH2O) severely impaired venous return and ruptured edematous alveoli, causing cardiovascular collapse.`
+            };
+          }
+          if (settings.peep < 6 || settings.fio2 < 50) {
+            return {
+              status: 'fatal',
+              msg: "Worsening Pulmonary Edema & Hypoxic Arrest",
+              feedback: `CPAP of ${settings.peep} cmH2O and FiO2 ${settings.fio2}% failed to overcome alveolar flooding and intrapulmonary shunting, resulting in severe hypoxemia and cardiac arrest. Use CPAP 8–12 cmH2O and FiO2 60–100%.`
+            };
+          }
+          if (
+            settings.mode === 'CPAP' &&
+            settings.peep >= 8 &&
+            settings.peep <= 12 &&
+            settings.fio2 >= 60
+          ) {
+            return {
+              status: 'success',
+              msg: "Flash Pulmonary Edema Resolved with CPAP",
+              feedback: `Spot on! Non-invasive CPAP at ${settings.peep} cmH2O with FiO2 ${settings.fio2}% recruited fluid-filled alveoli, decreased left ventricular preload and afterload, and rapidly restored SpO2 without needing intubation.`
+            };
+          }
+          return {
+            status: 'warning',
+            msg: "Suboptimal Non-Invasive Settings",
+            feedback: `The patient is stabilizing, but CPAP (8–12 cmH2O) with FiO2 60–100% is the ideal first-line setting for acute cardiogenic pulmonary edema.`
+          };
+        }
+      },
+      {
+        id: 4,
+        title: "Scenario 4: Acute COPD Exacerbation with Hypercapnia (68kg Male)",
+        patientWeightKg: 68,
+        spontaneousDrive: true,
+        description:
+          "68kg male with severe COPD admitted with acute dyspnea and respiratory acidosis (ABG: pH 7.24, PaCO2 78 mmHg, PaO2 52 mmHg, SpO2 83%). He is drowsy but easily arousable and protecting his airway.",
+        pathophysiology:
+          "Severe expiratory airflow limitation and dynamic hyperinflation cause respiratory muscle fatigue, alveolar hypoventilation, and acute hypercapnic acidosis. Giving excessive oxygen (FiO2 100%) worsens hypercapnia via V/Q mismatch and the Haldane effect.",
+        treatmentGoal:
+          "Non-Invasive BiPAP Strategy: Use BiPAP to unload fatigued inspiratory muscles and augment tidal volume. Set IPAP 12–18 cmH2O, EPAP (PEEP) 4–8 cmH2O, Backup RR 10–14 bpm, and controlled FiO2 (28–45%) targeting SpO2 88–92%.",
+        baselineVitals: { spo2: 83, hr: 118, pip: 16, pplat: 14, bp: "135/80" },
+        evaluate: (settings) => {
+          if (settings.mode === 'VCV' || settings.mode === 'PCV') {
+            return {
+              status: 'warning',
+              msg: "Avoidable Intubation: Try BiPAP First",
+              feedback: `Because this COPD patient is arousable and protecting his airway, BiPAP (IPAP 12–18 cmH2O, EPAP 4–8 cmH2O, FiO2 28–45%) is strongly preferred over invasive intubation to reduce mortality and ventilator-associated pneumonia.`
+            };
+          }
+          if (settings.mode === 'CPAP') {
+            return {
+              status: 'fatal',
+              msg: "Worsening Hypercapnic Acidosis & Narcosis",
+              feedback: `CPAP provides only a single continuous pressure without inspiratory pressure support (IPAP). Without inspiratory assistance to boost tidal volume and blow off CO2, PaCO2 rose further, causing CO2 narcosis and arrest. Use BiPAP!`
+            };
+          }
+          if (settings.ipap > 24 || settings.peep > 14) {
+            return {
+              status: 'fatal',
+              msg: "Gastric Insufflation, Aspiration & Barotrauma",
+              feedback: `IPAP of ${settings.ipap} cmH2O exceeded lower esophageal sphincter pressure and overdistended bullous COPD lungs, causing aspiration and pneumothorax.`
+            };
+          }
+          if (settings.ipap < 10 || settings.ipap <= settings.peep || settings.fio2 < 24) {
+            return {
+              status: 'fatal',
+              msg: "Inadequate Pressure Support & Acidotic Arrest",
+              feedback: `IPAP (${settings.ipap} cmH2O) was insufficient relative to EPAP (${settings.peep} cmH2O) to generate adequate tidal volumes, resulting in worsening respiratory acidosis and arrest.`
+            };
+          }
+          if (
+            settings.mode === 'BiPAP' &&
+            settings.ipap >= 12 &&
+            settings.ipap <= 18 &&
+            settings.peep >= 4 &&
+            settings.peep <= 8 &&
+            settings.fio2 >= 28 &&
+            settings.fio2 <= 50
+          ) {
+            return {
+              status: 'success',
+              msg: "BiPAP Unloaded Respiratory Muscles & Corrected Acidosis",
+              feedback: `Excellent clinical judgment! BiPAP with IPAP ${settings.ipap} cmH2O and EPAP ${settings.peep} cmH2O provided ${settings.ipap - settings.peep} cmH2O of pressure support to clear CO2, while controlled FiO2 (${settings.fio2}%) avoided oxygen-induced hypercapnia.`
+            };
+          }
+          return {
+            status: 'warning',
+            msg: "BiPAP Settings Need Fine-Tuning",
+            feedback: `Good choice using BiPAP! Optimize settings to IPAP 12–18 cmH2O, EPAP 4–8 cmH2O, Backup RR 10–14 bpm, and controlled FiO2 (28–45%) to maintain SpO2 88–92% without worsening hypercapnia.`
+          };
+        }
+      },
+      {
+        id: 5,
+        title: "Scenario 5: Opiate Overdose & Apnea (80kg Male)",
+        patientWeightKg: 80,
+        spontaneousDrive: false,
+        description:
+          "80kg male intubated for airway protection following a severe opioid overdose. Lungs are completely healthy with normal compliance, but he is completely apneic with zero native respiratory drive.",
+        pathophysiology:
+          "Opioids depress medullary respiratory centers, abolishing central respiratory drive and causing complete apnea. Lung compliance and resistance are normal, so the ventilator must provide full mandatory minute ventilation.",
+        treatmentGoal:
+          "Standard Physiological Invasive Ventilation (VCV/PCV): Because he is apneic, he requires mandatory breaths. Set Vt 480–640 mL (6–8 mL/kg PBW), RR 12–16 bpm, physiological PEEP 4–8 cmH2O, and FiO2 30–50%.",
+        baselineVitals: { spo2: 75, hr: 65, pip: 15, pplat: 12, bp: "110/75" },
+        evaluate: (settings) => {
+          if (settings.mode === 'CPAP') {
+            return {
+              status: 'fatal',
+              msg: "Fatal Apnea on CPAP (No Mandatory Breaths Delivered)",
+              feedback: `CPAP delivers constant airway pressure and relies 100% on the patient's own respiratory drive. Because an opiate overdose patient is apneic, zero breaths were delivered, causing fatal hypoxic and hypercapnic arrest.`
+            };
+          }
+          if (settings.mode === 'BiPAP') {
+            return {
+              status: 'fatal',
+              msg: "Unsafe Non-Invasive Mode in Comatose Apneic Patient",
+              feedback: `Comatose, apneic overdose patients have lost airway protective reflexes and must be managed with invasive mechanical ventilation (VCV or PCV), not non-invasive BiPAP.`
+            };
+          }
+          if (settings.vt > 800 || settings.peep > 15) {
+            return {
+              status: 'fatal',
+              msg: "Iatrogenic Barotrauma / Pneumothorax",
+              feedback: `You set Vt to ${settings.vt} mL and PEEP to ${settings.peep} cmH2O. Even healthy lungs rupture when subjected to extreme tidal volumes (>10 mL/kg) or excessive PEEP.`
+            };
+          }
+          if (settings.vt < 320 || settings.rr < 8 || settings.fio2 < 21) {
+            return {
+              status: 'fatal',
+              msg: "Profound Hypoventilation, Hypercapnic Acidosis & Arrest",
+              feedback: `You set Vt to ${settings.vt} mL and RR to ${settings.rr} bpm (Minute Ventilation ${(
+                (settings.vt * settings.rr) /
+                1000
+              ).toFixed(1)} L/min). With zero spontaneous drive, severe hypoventilation caused rapid CO2 accumulation and arrest.`
+            };
+          }
+          if (
+            settings.vt >= 450 &&
+            settings.vt <= 650 &&
+            settings.rr >= 12 &&
+            settings.rr <= 16 &&
+            settings.peep >= 4 &&
+            settings.peep <= 8 &&
+            settings.fio2 >= 30
+          ) {
+            return {
+              status: 'success',
+              msg: "Physiological Ventilation Established",
+              feedback: `Well done! Standard physiological settings (Vt ${settings.vt} mL [~${(settings.vt / 80).toFixed(1)} mL/kg], RR ${settings.rr} bpm, PEEP ${settings.peep} cmH2O) safely restore oxygenation and acid-base balance.`
+            };
+          }
+          return {
+            status: 'warning',
+            msg: "Settings Outside Normal Physiological Range",
+            feedback: `The patient is alive, but settings are suboptimal for healthy lungs. Target Vt 480–640 mL (6–8 mL/kg), RR 12–16 bpm, PEEP 4–8 cmH2O, and FiO2 ≥ 30%.`
+          };
+        }
+      },
+      {
+        id: 6,
+        title: "Scenario 6: Traumatic Brain Injury with Elevated ICP (75kg Male)",
+        patientWeightKg: 75,
+        spontaneousDrive: false,
+        description:
+          "75kg male intubated for severe traumatic brain injury (GCS 6) with an intracranial pressure (ICP) monitor reading 24 mmHg. Lungs are healthy, but tight PaCO2 and cerebral perfusion control are critical.",
+        pathophysiology:
+          "Cerebral blood flow is directly proportional to PaCO2. Hypoventilation (hypercapnia) causes cerebral vasodilation and dangerous ICP spikes, whereas aggressive hyperventilation (hypocapnia) causes cerebral vasoconstriction and brain ischemia. High PEEP impedes cerebral venous drainage.",
+        treatmentGoal:
+          "Neuro-Protective Invasive Strategy (VCV/PCV): Maintain strict normocapnia (PaCO2 35–40 mmHg) and normoxia. Set Vt 450–600 mL (6–8 mL/kg), RR 14–18 bpm, low-moderate PEEP (5–8 cmH2O) to preserve jugular venous outflow, and FiO2 40–60%.",
+        baselineVitals: { spo2: 91, hr: 58, pip: 17, pplat: 14, bp: "155/90" },
+        evaluate: (settings) => {
+          if (settings.mode === 'CPAP' || settings.mode === 'BiPAP') {
+            return {
+              status: 'fatal',
+              msg: "Airway Loss & Cerebral Herniation",
+              feedback: `A comatose TBI patient (GCS 6) cannot protect their airway and requires invasive VCV or PCV to guarantee strict PaCO2 control. Non-invasive ${settings.mode} led to hypercapnia and fatal ICP elevation.`
+            };
+          }
+          if (settings.peep > 14 || settings.vt > 750) {
+            return {
+              status: 'fatal',
+              msg: "Impaired Cerebral Venous Outflow & ICP Crisis",
+              feedback: `Excessive PEEP (${settings.peep} cmH2O) or Vt (${settings.vt} mL) raised intrathoracic pressure, obstructing jugular venous drainage from the brain and triggering fatal intracranial hypertension.`
+            };
+          }
+          if (settings.rr < 10 || settings.vt < 350) {
+            return {
+              status: 'fatal',
+              msg: "Hypercapnic Cerebral Vasodilation & Brain Herniation",
+              feedback: `Hypoventilation (Vt ${settings.vt} mL, RR ${settings.rr} bpm) caused acute PaCO2 retention, massive cerebral vasodilation, and fatal uncal herniation.`
+            };
+          }
+          if (settings.rr > 24 && settings.vt >= 500) {
+            return {
+              status: 'fatal',
+              msg: "Severe Hypocapnic Cerebral Vasoconstriction & Ischemia",
+              feedback: `Aggressive hyperventilation (RR ${settings.rr} bpm, Vt ${settings.vt} mL) drove PaCO2 dangerously low, causing severe cerebral vasoconstriction and global brain ischemia.`
+            };
+          }
+          if (
+            settings.vt >= 450 &&
+            settings.vt <= 600 &&
+            settings.rr >= 14 &&
+            settings.rr <= 18 &&
+            settings.peep >= 5 &&
+            settings.peep <= 8 &&
+            settings.fio2 >= 35
+          ) {
+            return {
+              status: 'success',
+              msg: "Neuro-Protective Normocapnia & ICP Stabilized",
+              feedback: `Superb neuro-critical care! Vt ${settings.vt} mL and RR ${settings.rr} bpm maintain strict normocapnia, while PEEP ${settings.peep} cmH2O prevents atelectasis without impeding cerebral venous outflow.`
+            };
+          }
+          return {
+            status: 'warning',
+            msg: "Suboptimal Neuro-Protective Targets",
+            feedback: `Refine settings to maintain strict normocapnia and protect ICP: Vt 450–600 mL, RR 14–18 bpm, PEEP 5–8 cmH2O, and FiO2 ≥ 35%.`
+          };
+        }
+      },
+      {
+        id: 7,
+        title: "Scenario 7: Guillain-Barré Neuromuscular Failure (65kg Female)",
+        patientWeightKg: 65,
+        spontaneousDrive: false,
+        description:
+          "65kg female with rapidly ascending Guillain-Barré syndrome, vital capacity < 12 mL/kg, and diaphragmatic paralysis. She was electively intubated for neuromuscular ventilatory failure; lung parenchyma is completely normal.",
+        pathophysiology:
+          "Demyelination of peripheral motor nerves causes profound diaphragmatic and intercostal muscle weakness. Although her alveoli and airways are healthy, she lacks the mechanical bellows strength to generate adequate tidal volumes or clear basal atelectasis.",
+        treatmentGoal:
+          "Invasive Full Ventilatory Support (VCV/PCV): Provide full physiological minute ventilation with lung-protective volumes to prevent atelectasis: Vt 390–520 mL (6–8 mL/kg PBW), RR 12–16 bpm, PEEP 5–8 cmH2O, and FiO2 30–50%.",
+        baselineVitals: { spo2: 86, hr: 112, pip: 16, pplat: 13, bp: "125/80" },
+        evaluate: (settings) => {
+          if (settings.mode === 'CPAP') {
+            return {
+              status: 'fatal',
+              msg: "Neuromuscular Exhaustion & Hypercapnic Arrest on CPAP",
+              feedback: `CPAP provides zero inspiratory assistance. Because her diaphragm is paralyzed from Guillain-Barré syndrome, she cannot generate tidal volumes on CPAP alone, leading to fatal hypercapnic arrest.`
+            };
+          }
+          if (settings.vt > 700 || settings.peep > 15) {
+            return {
+              status: 'fatal',
+              msg: "Iatrogenic Volutrauma / Pneumothorax",
+              feedback: `Excessive Tidal Volume (${settings.vt} mL = ${(settings.vt / 65).toFixed(1)} mL/kg) or PEEP (${settings.peep} cmH2O) overdistended healthy alveoli and caused a fatal pneumothorax.`
+            };
+          }
+          if (settings.vt < 300 || settings.rr < 10 || settings.fio2 < 25) {
+            return {
+              status: 'fatal',
+              msg: "Inadequate Minute Ventilation & Respiratory Acidosis",
+              feedback: `With diaphragmatic paralysis, the patient depends entirely on your set minute ventilation. Vt ${settings.vt} mL and RR ${settings.rr} bpm were insufficient to sustain ventilation.`
+            };
+          }
+          if (
+            (settings.mode === 'VCV' || settings.mode === 'PCV') &&
+            settings.vt >= 390 &&
+            settings.vt <= 520 &&
+            settings.rr >= 12 &&
+            settings.rr <= 16 &&
+            settings.peep >= 5 &&
+            settings.peep <= 8 &&
+            settings.fio2 >= 30
+          ) {
+            return {
+              status: 'success',
+              msg: "Safe Neuromuscular Ventilatory Support Established",
+              feedback: `Great job! Vt ${settings.vt} mL (~${(settings.vt / 65).toFixed(1)} mL/kg), RR ${settings.rr} bpm, and PEEP ${settings.peep} cmH2O fully replace her paralyzed respiratory pump while preventing atelectasis.`
+            };
+          }
+          return {
+            status: 'warning',
+            msg: "Suboptimal Neuromuscular Support Settings",
+            feedback: `Use invasive VCV or PCV with Vt 390–520 mL (6–8 mL/kg), RR 12–16 bpm, PEEP 5–8 cmH2O, and FiO2 30–50%.`
+          };
+        }
+      },
+      {
+        id: 8,
+        title: "Scenario 8: Post-Op OSA & Basilar Atelectasis (95kg Male, PBW 75kg)",
+        patientWeightKg: 75,
+        spontaneousDrive: true,
+        description:
+          "95kg male (PBW 75kg) with severe obstructive sleep apnea (OSA) in the PACU 1 hour after abdominal surgery. He is awake, breathing spontaneously, snoring heavily with upper airway obstruction and basilar atelectasis (SpO2 85%).",
+        pathophysiology:
+          "Residual anesthetics and supine positioning cause pharyngeal soft-tissue collapse (OSA) and diaphragmatic splinting with basilar micro-atelectasis, leading to hypoxemia despite intact central respiratory drive.",
+        treatmentGoal:
+          "Non-Invasive CPAP Strategy: Apply CPAP 8–12 cmH2O with FiO2 40–60%. CPAP acts as a pneumatic splint to keep the upper airway open and recruits collapsed basilar alveoli without requiring re-intubation.",
+        baselineVitals: { spo2: 85, hr: 108, pip: 12, pplat: 10, bp: "140/85" },
+        evaluate: (settings) => {
+          if (settings.mode === 'VCV' || settings.mode === 'PCV') {
+            if (settings.vt > 700) {
+              return {
+                status: 'fatal',
+                msg: "Volutrauma from Dosing Actual vs. Predicted Body Weight",
+                feedback: `You dosed Vt (${settings.vt} mL) based on actual weight (95kg) instead of PBW (75kg), causing severe lung overdistension. Moreover, an awake post-op OSA patient should be managed with non-invasive CPAP!`
+              };
+            }
+            return {
+              status: 'warning',
+              msg: "Unnecessary Invasive Ventilation Selected",
+              feedback: `This patient is awake and breathing spontaneously in the PACU. Non-invasive CPAP (8–12 cmH2O, FiO2 40–60%) resolves OSA obstruction and post-op atelectasis without needing re-intubation.`
+            };
+          }
+          if (settings.peep < 6 || settings.fio2 < 35) {
+            return {
+              status: 'fatal',
+              msg: "Recurrent Upper Airway Collapse & Hypoxic Arrest",
+              feedback: `CPAP of ${settings.peep} cmH2O and FiO2 ${settings.fio2}% failed to splint open the obstructed pharynx or recruit atelectatic lung bases, causing severe hypoxemia.`
+            };
+          }
+          if (settings.peep > 16 || (settings.mode === 'BiPAP' && settings.ipap > 20)) {
+            return {
+              status: 'fatal',
+              msg: "Gastric Distension & Abdominal Wound Dehiscence / Aspiration",
+              feedback: `Excessive non-invasive pressure (${settings.mode === 'BiPAP' ? settings.ipap : settings.peep} cmH2O) caused severe aerophagia, gastric distension, and aspiration.`
+            };
+          }
+          if (
+            (settings.mode === 'CPAP' || settings.mode === 'BiPAP') &&
+            settings.peep >= 8 &&
+            settings.peep <= 12 &&
+            settings.fio2 >= 40 &&
+            settings.fio2 <= 70
+          ) {
+            return {
+              status: 'success',
+              msg: "Upper Airway Splinted & Atelectasis Recruited",
+              feedback: `Excellent! ${settings.mode} at ${settings.peep} cmH2O with FiO2 ${settings.fio2}% splinted open the upper airway, recruited basilar atelectasis, and normalized SpO2.`
+            };
+          }
+          return {
+            status: 'warning',
+            msg: "Adjust CPAP / Oxygenation Parameters",
+            feedback: `Good choice using non-invasive support! Set CPAP to 8–12 cmH2O and FiO2 to 40–60% for optimal airway splinting and alveolar recruitment.`
+          };
+        }
+      },
+      {
+        id: 9,
+        title: "Scenario 9: Severe Pneumonia with Unilateral Consolidation (70kg Male)",
+        patientWeightKg: 70,
+        spontaneousDrive: false,
+        description:
+          "70kg male intubated for severe left-sided bacterial pneumonia and septic shock. Chest X-ray shows dense left lung consolidation while the right lung is relatively spared (SpO2 84%, PIP 36 cmH2O).",
+        pathophysiology:
+          "In asymmetric/unilateral lung disease, high tidal volumes preferentially enter the healthier, more compliant right lung, causing regional overdistension (volutrauma), while excessive PEEP can divert blood flow to the consolidated left lung and worsen shunting.",
+        treatmentGoal:
+          "Lung-Protective Invasive Strategy (VCV/PCV): Protect the healthy lung from overdistension using low Vt 380–460 mL (~6 mL/kg PBW), moderate PEEP (8–12 cmH2O), RR 14–22 bpm, and FiO2 70–100%.",
+        baselineVitals: { spo2: 84, hr: 130, pip: 36, pplat: 29, bp: "88/54" },
+        evaluate: (settings) => {
+          if (settings.mode === 'CPAP' || settings.mode === 'BiPAP') {
+            return {
+              status: 'fatal',
+              msg: "Septic Shock & Refractory Hypoxemia on Non-Invasive Mode",
+              feedback: `This patient is intubated in septic shock with severe pneumonia. Non-invasive ${settings.mode} cannot adequately oxygenate or support him, resulting in cardiovascular collapse.`
+            };
+          }
+          if (settings.vt > 580 || settings.peep > 16) {
+            return {
+              status: 'fatal',
+              msg: "Overdistension of Healthy Lung & Tension Pneumothorax",
+              feedback: `Because the left lung is consolidated, Vt ${settings.vt} mL and PEEP ${settings.peep} cmH2O forced excessive volume into the compliant right lung, rupturing alveoli and causing a right tension pneumothorax.`
+            };
+          }
+          if (settings.fio2 < 60 || settings.peep < 6 || settings.vt < 300 || settings.rr < 10) {
+            return {
+              status: 'fatal',
+              msg: "Severe Hypoxemia & Septic Arrest",
+              feedback: `Insufficient FiO2 (${settings.fio2}%), PEEP (${settings.peep} cmH2O), or minute ventilation failed to correct severe shunting from pneumonia, causing hypoxic arrest.`
+            };
+          }
+          if (
+            settings.vt >= 380 &&
+            settings.vt <= 460 &&
+            settings.peep >= 8 &&
+            settings.peep <= 12 &&
+            settings.fio2 >= 70 &&
+            settings.rr >= 14 &&
+            settings.rr <= 22
+          ) {
+            return {
+              status: 'success',
+              msg: "Asymmetric Lung Protected & Oxygenation Restored",
+              feedback: `Well done! A lung-protective Vt of ${settings.vt} mL (~${(settings.vt / 70).toFixed(1)} mL/kg) prevented overdistension of the healthy right lung, while PEEP ${settings.peep} cmH2O and FiO2 ${settings.fio2}% restored oxygenation.`
+            };
+          }
+          return {
+            status: 'warning',
+            msg: "Suboptimal Asymmetric Pneumonia Settings",
+            feedback: `Refine your invasive settings: Vt 380–460 mL (~6 mL/kg), moderate PEEP 8–12 cmH2O, RR 14–22 bpm, and FiO2 70–100%.`
+          };
+        }
+      },
+      {
+        id: 10,
+        title: "Scenario 10: Obesity Hypoventilation Decompensation (115kg Female, PBW 60kg)",
+        patientWeightKg: 60,
+        spontaneousDrive: true,
+        description:
+          "115kg female (height 165 cm, Predicted Body Weight 60kg) presenting with acute-on-chronic hypercapnic respiratory failure (pH 7.25, PaCO2 76 mmHg, SpO2 83%). She is somnolent but arousable and has high chest-wall elastance.",
+        pathophysiology:
+          "Severe obesity increases chest-wall weight, reduces functional residual capacity (FRC), and causes basilar atelectasis and nocturnal/diurnal hypoventilation. Crucial rule: Lung size correlates with height/PBW (60kg), NOT actual body weight (115kg)!",
+        treatmentGoal:
+          "BiPAP Strategy (Preferred) or PBW-Guided Lung-Protective Ventilation: Start BiPAP with IPAP 14–20 cmH2O, higher EPAP (7–10 cmH2O) to overcome chest-wall weight/atelectasis, Backup RR 12–16 bpm, and FiO2 30–60%.",
+        baselineVitals: { spo2: 83, hr: 115, pip: 24, pplat: 20, bp: "145/88" },
+        evaluate: (settings) => {
+          if (settings.mode === 'VCV' || settings.mode === 'PCV') {
+            if (settings.vt > 550) {
+              return {
+                status: 'fatal',
+                msg: "Severe Volutrauma: Dosed by Actual Weight Instead of PBW!",
+                feedback: `Critical pearl: Although she weighs 115kg, her Predicted Body Weight (PBW) is 60kg! Setting Vt to ${settings.vt} mL (${(settings.vt / 60).toFixed(1)} mL/kg PBW) severely overdistended her lungs and caused barotrauma. Also, BiPAP is preferred first-line for OHS!`
+              };
+            }
+            return {
+              status: 'warning',
+              msg: "PBW Respected, But BiPAP is Preferred First-Line",
+              feedback: `You safely respected her 60kg PBW, avoiding volutrauma. However, because she is arousable with acute-on-chronic hypercapnia, non-invasive BiPAP (IPAP 14–20 cmH2O, EPAP 7–10 cmH2O) is the preferred first-line therapy.`
+            };
+          }
+          if (settings.mode === 'CPAP') {
+            return {
+              status: 'fatal',
+              msg: "Persistent Hypercapnic Acidosis on CPAP",
+              feedback: `While CPAP recruits atelectasis, it lacks inspiratory pressure support (IPAP) needed to overcome heavy chest-wall elastance and clear CO2 in decompensated Obesity Hypoventilation Syndrome. Use BiPAP!`
+            };
+          }
+          if (settings.ipap > 25 || settings.peep > 15) {
+            return {
+              status: 'fatal',
+              msg: "Excessive Pressure: Gastric Insufflation & Barotrauma",
+              feedback: `IPAP ${settings.ipap} cmH2O and EPAP ${settings.peep} cmH2O exceeded safe non-invasive limits, causing severe gastric distension, aspiration, and barotrauma.`
+            };
+          }
+          if (settings.ipap < 12 || settings.peep < 6 || settings.fio2 < 25) {
+            return {
+              status: 'fatal',
+              msg: "Inadequate Pressure Support & Persistent Atelectasis",
+              feedback: `Obese chest-wall mechanics require higher EPAP (7–10 cmH2O) to prevent alveolar collapse and adequate IPAP (14–20 cmH2O) to augment tidal volume. Lower settings resulted in worsening acidosis and arrest.`
+            };
+          }
+          if (
+            settings.mode === 'BiPAP' &&
+            settings.ipap >= 14 &&
+            settings.ipap <= 20 &&
+            settings.peep >= 7 &&
+            settings.peep <= 10 &&
+            settings.fio2 >= 30 &&
+            settings.fio2 <= 65
+          ) {
+            return {
+              status: 'success',
+              msg: "Obesity Hypoventilation Stabilized with BiPAP",
+              feedback: `Masterful clinical care! EPAP ${settings.peep} cmH2O counteracted heavy chest-wall weight and recruited basilar alveoli, while IPAP ${settings.ipap} cmH2O (${settings.ipap - settings.peep} cmH2O pressure support) cleared CO2 without intubation.`
+            };
+          }
+          return {
+            status: 'warning',
+            msg: "Fine-Tune BiPAP for Obese Chest-Wall Mechanics",
+            feedback: `Good choice using BiPAP! Target IPAP 14–20 cmH2O, EPAP 7–10 cmH2O (to overcome chest-wall weight), Backup RR 12–16 bpm, and FiO2 30–60%.`
+          };
+        }
+      }
+    ];
+
+    // =========================================================================
+    // 2. APPLICATION STATE
+    // =========================================================================
+    const state = {
+      currentScenarioIndex: 0,
+      settings: {
+        mode: '',
+        vt: 0,
+        rr: 0,
+        peep: 0,
+        ipap: 0,
+        fio2: 0,
+        ie: ''
+      },
+      status: 'idle', // 'idle' | 'warning' | 'success' | 'fatal'
+      statusMsg: 'All ventilator settings are reset to 0 (nil). Select a ventilation mode and dial your settings.',
+      vitals: { ...SCENARIOS[0].baselineVitals },
+      lastEvaluationReport: null,
+      isMuted: false,
+      activeAlarmSignature: '',
+      alarmIntervalId: null
+    };
+
+    // =========================================================================
+    // 3. WEB AUDIO API (ECG BEEP, AUTO-ALARM CHIME, FLATLINE)
+    // =========================================================================
+    let audioCtx = null;
+
+    function ensureAudioContext() {
+      if (!audioCtx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          audioCtx = new AudioCtx();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
+      }
+      return audioCtx;
+    }
+
+    window.addEventListener(
+      'pointerdown',
+      () => {
+        if (!state.isMuted) ensureAudioContext();
+      },
+      { passive: true }
+    );
+
+    function playQrsBeep(currentSpo2) {
+      const beatEl = document.getElementById('beat-indicator');
+      if (beatEl && state.status !== 'fatal') {
+        beatEl.classList.add('text-green-300', 'scale-125');
+        beatEl.classList.remove('text-green-500');
+        setTimeout(() => {
+          beatEl.classList.remove('text-green-300', 'scale-125');
+          if (state.status !== 'fatal') beatEl.classList.add('text-green-500');
+        }, 110);
+      }
+
+      if (state.isMuted) return;
+      const ctx = ensureAudioContext();
+      if (!ctx || ctx.state !== 'running') return;
+
+      try {
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        const clampedSpo2 = Math.max(65, Math.min(100, currentSpo2 || 95));
+        const freq = 480 + ((clampedSpo2 - 65) / 35) * 420;
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now);
+
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.09, now + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.095);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.1);
+      } catch (e) {}
+    }
+
+    function playFlatlineTone() {
+      if (state.isMuted) return;
+      const ctx = ensureAudioContext();
+      if (!ctx || ctx.state !== 'running') return;
+
+      try {
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(340, now);
+
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.12, now + 0.05);
+        gain.gain.setValueAtTime(0.12, now + 1.5);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.9);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 1.95);
+      } catch (e) {}
+    }
+
+    function playVentilatorAlarmBurst() {
+      if (state.isMuted) return;
+      const ctx = ensureAudioContext();
+      if (!ctx || ctx.state !== 'running') return;
+
+      try {
+        const now = ctx.currentTime;
+        const pulseOffsets = [0, 0.16, 0.32];
+        const pulseFreqs = [880, 660, 880];
+
+        pulseOffsets.forEach((offset, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(pulseFreqs[idx], now + offset);
+
+          gain.gain.setValueAtTime(0.0001, now + offset);
+          gain.gain.exponentialRampToValueAtTime(0.065, now + offset + 0.015);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.11);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+
+          osc.start(now + offset);
+          osc.stop(now + offset + 0.12);
+        });
+      } catch (e) {}
+    }
+
+    function syncAutoAlarmSound(activeAlarms) {
+      const signature =
+        state.status === 'fatal' || state.isMuted || activeAlarms.length === 0
+          ? ''
+          : activeAlarms.map((a) => a.id).join(',');
+
+      if (signature === state.activeAlarmSignature) return;
+      state.activeAlarmSignature = signature;
+
+      if (state.alarmIntervalId) {
+        clearInterval(state.alarmIntervalId);
+        state.alarmIntervalId = null;
+      }
+
+      if (signature) {
+        playVentilatorAlarmBurst();
+        state.alarmIntervalId = setInterval(() => {
+          playVentilatorAlarmBurst();
+        }, 2400);
+      }
+    }
+
+    // =========================================================================
+    // 4. PHYSIOLOGICAL VENTILATOR MECHANICS ENGINE
+    // =========================================================================
+    function computeVentilatorMechanics(settings, scenario) {
+      const isNil = !settings.mode;
+      const isCpap = settings.mode === 'CPAP';
+      const isBipap = settings.mode === 'BiPAP';
+
+      let rr = settings.rr || 0;
+      if (isCpap) {
+        rr = scenario.spontaneousDrive ? 20 : 0;
+      } else if (isBipap && rr === 0) {
+        rr = scenario.spontaneousDrive ? 18 : 0;
+      }
+
+      const totalCycleSec = rr > 0 ? 60 / rr : 0;
+      const expRatio = Number((settings.ie || '1:2').split(':')[1]) || 2;
+      const inspFrac = isCpap ? 0.35 : isBipap ? 0.33 : 1 / (1 + expRatio);
+      const tiSec = totalCycleSec * inspFrac;
+      const teSec = totalCycleSec - tiSec;
+
+      let compliance = 55;
+      let resistivePress = 6;
+      let tauE = 0.45;
+
+      if (scenario.id === 1 || scenario.id === 9) {
+        compliance = 22;
+        resistivePress = 7;
+        tauE = 0.4;
+      } else if (scenario.id === 2 || scenario.id === 4) {
+        compliance = 55;
+        resistivePress = 24;
+        tauE = 1.75;
+      } else if (scenario.id === 10) {
+        compliance = 42;
+        resistivePress = 8;
+        tauE = 0.5;
+      }
+
+      let effectiveVt = settings.vt || 0;
+      if (isCpap) {
+        effectiveVt =
+          scenario.spontaneousDrive && settings.peep > 0
+            ? Math.min(480, Math.round(220 + settings.peep * 22))
+            : 0;
+      } else if (isBipap) {
+        const ps = Math.max(0, (settings.ipap || 0) - (settings.peep || 0));
+        const spontAssist = scenario.spontaneousDrive && ps > 0 ? 120 : 0;
+        effectiveVt = ps > 0 ? Math.min(750, Math.round(ps * (compliance * 0.65) + spontAssist)) : 0;
+      }
+
+      const decayFactor = rr > 0 && teSec > 0 ? Math.exp(-teSec / tauE) : 0;
+      const rawTrappedVol =
+        !isNil && rr > 0 && effectiveVt > 0 && decayFactor < 0.95
+          ? effectiveVt * (decayFactor / (1 - decayFactor))
+          : 0;
+      const trappedVol = Math.min(350, Math.max(0, rawTrappedVol));
+      const autoPeep = trappedVol / compliance;
+      const totalPeep = (settings.peep || 0) + autoPeep;
+
+      let pplat = 0;
+      let pip = 0;
+
+      if (!isNil && rr > 0) {
+        if (isCpap) {
+          pplat = settings.peep || 0;
+          pip = settings.peep || 0;
+        } else if (isBipap) {
+          pplat = Math.max(settings.peep || 0, settings.ipap || 0);
+          pip = pplat;
+        } else if (effectiveVt > 0) {
+          const elasticPress = effectiveVt / compliance;
+          pplat = Math.round(totalPeep + elasticPress);
+          pip = settings.mode === 'PCV' ? pplat : Math.round(pplat + resistivePress);
+        } else {
+          pplat = settings.peep || 0;
+          pip = settings.peep || 0;
+        }
+      } else if (!isNil) {
+        pplat = settings.peep || 0;
+        pip = settings.peep || 0;
+      }
+
+      let estimatedSpo2 = scenario.baselineVitals.spo2;
+      if (!isNil) {
+        const fio2Boost = Math.max(0, (settings.fio2 - 21) * 0.28);
+        const peepBoost = Math.min(8, (settings.peep || 0) * 0.65);
+        const ventPenalty = effectiveVt === 0 || rr === 0 ? -12 : 0;
+        estimatedSpo2 = Math.round(
+          Math.min(100, Math.max(68, scenario.baselineVitals.spo2 - 6 + fio2Boost + peepBoost + ventPenalty))
+        );
+      }
+
+      return {
+        isNil,
+        isCpap,
+        isBipap,
+        rr,
+        totalCycleSec,
+        tiSec,
+        teSec,
+        tauE,
+        effectiveVt,
+        trappedVol: Math.round(trappedVol),
+        autoPeep: Number(autoPeep.toFixed(1)),
+        pplat,
+        pip,
+        estimatedSpo2
+      };
+    }
+
+    // =========================================================================
+    // 5. MODAL SYSTEM
+    // =========================================================================
+    function openModal(title, htmlContent, type = 'info') {
+      const modal = document.getElementById('app-modal');
+      const card = document.getElementById('modal-card');
+      const titleEl = document.getElementById('modal-title');
+      const bodyEl = document.getElementById('modal-body');
+
+      const bgClasses = {
+        info: ['bg-slate-900', 'border-blue-500/50'],
+        fatal: ['bg-red-950', 'border-red-500'],
+        warning: ['bg-yellow-950', 'border-yellow-500/80'],
+        success: ['bg-green-950', 'border-green-500']
+      };
+      const textClasses = {
+        info: 'text-blue-400',
+        fatal: 'text-red-400',
+        warning: 'text-yellow-400',
+        success: 'text-green-400'
+      };
+
+      card.className = `w-full max-w-2xl max-h-[85vh] flex flex-col rounded-2xl border-2 shadow-2xl overflow-hidden ${bgClasses[type].join(' ')}`;
+      titleEl.className = `text-base sm:text-lg font-bold tracking-wide ${textClasses[type]}`;
+      titleEl.textContent = title;
+      bodyEl.innerHTML = htmlContent;
+      modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('app-modal').classList.add('hidden');
+    }
+
+    function showGuidelinesModal() {
+      const html = `
+        <div class="space-y-6">
+          <section>
+            <h4 class="text-cyan-400 font-bold text-lg mb-2">ARDS &amp; Lung-Protective Strategy (Invasive)</h4>
+            <ul class="list-disc list-inside text-slate-300 space-y-1.5 ml-2 text-sm">
+              <li><strong>Target Tidal Volume (Vt):</strong> 4–8 mL/kg <em>Predicted Body Weight (PBW)</em> (start at 6 mL/kg)—never dose by actual weight in obesity.</li>
+              <li><strong>PEEP &amp; FiO2:</strong> Use higher PEEP (10–16 cmH2O) to recruit collapsed alveoli and keep Plateau Pressure (Pplat) &lt; 30 cmH2O.</li>
+            </ul>
+          </section>
+          <section>
+            <h4 class="text-cyan-400 font-bold text-lg mb-2">Non-Invasive Ventilation: CPAP vs. BiPAP</h4>
+            <ul class="list-disc list-inside text-slate-300 space-y-1.5 ml-2 text-sm">
+              <li><strong>CPAP:</strong> Single constant pressure (8–12 cmH2O). Best for <em>Cardiogenic Pulmonary Edema</em> and <em>Obstructive Sleep Apnea / Post-Op Atelectasis</em> in alert, spontaneously breathing patients.</li>
+              <li><strong>BiPAP:</strong> Alternates between higher <em>IPAP</em> (12–20 cmH2O) and lower <em>EPAP</em> (4–10 cmH2O). Pressure support (IPAP − EPAP) augments tidal volume to clear CO2—ideal for <em>COPD Exacerbation</em> and <em>Obesity Hypoventilation Syndrome</em>.</li>
+              <li><strong>Contraindications:</strong> Never use CPAP/BiPAP in apneic, comatose, or unprotected-airway patients.</li>
+            </ul>
+          </section>
+          <section>
+            <h4 class="text-cyan-400 font-bold text-lg mb-2">Obstructive Lung Disease (Status Asthmaticus)</h4>
+            <ul class="list-disc list-inside text-slate-300 space-y-1.5 ml-2 text-sm">
+              <li><strong>Core Issue:</strong> Severe expiratory airflow obstruction leads to air trapping (Auto-PEEP / breath stacking).</li>
+              <li><strong>Settings:</strong> Low RR (10–14 bpm), prolonged expiratory I:E ratio (1:3 or 1:4), and permissive hypercapnia.</li>
+            </ul>
+          </section>
+          <section>
+            <h4 class="text-cyan-400 font-bold text-lg mb-2">Reading Ventilator Scalar Waveforms</h4>
+            <ul class="list-disc list-inside text-slate-300 space-y-1.5 ml-2 text-sm">
+              <li><strong>Pressure vs. Time (cmH₂O):</strong> Begins and ends at PEEP (or EPAP/CPAP). Keep Pplat below the red 30 cmH₂O dashed threshold to prevent barotrauma.</li>
+              <li><strong>Volume vs. Time (mL):</strong> Rises to delivered Vt during inspiration and must return to 0 mL before the next breath. If it stays above 0 mL, air trapping (Auto-PEEP) is occurring.</li>
+            </ul>
+          </section>
+        </div>
+      `;
+      openModal('Clinical Ventilator Guidelines', html, 'info');
+    }
+
+    function showHintModal() {
+      const scenario = SCENARIOS[state.currentScenarioIndex];
+      const html = `
+        <div class="space-y-4">
+          <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+            <h4 class="text-blue-400 font-bold uppercase text-xs tracking-widest mb-1.5">Underlying Pathophysiology</h4>
+            <p class="text-slate-200 text-sm sm:text-base leading-relaxed">${scenario.pathophysiology}</p>
+          </div>
+          <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+            <h4 class="text-cyan-400 font-bold uppercase text-xs tracking-widest mb-1.5">Ventilation Strategy &amp; Treatment Goal</h4>
+            <p class="text-slate-200 text-sm sm:text-base leading-relaxed">${scenario.treatmentGoal}</p>
+          </div>
+        </div>
+      `;
+      openModal('Clinical Guidance & Pathophysiology', html, 'info');
+    }
+
+    function showEvaluationModal(report) {
+      if (!report) return;
+      let takeawayHtml = '';
+      if (report.status === 'fatal') {
+        takeawayHtml = `
+          <div class="mt-2 bg-red-900/40 p-4 rounded-xl border border-red-700 text-sm text-red-100">
+            <strong>Key Takeaway:</strong> Review the physiological mechanism above and consult <em>Guidelines</em> or <em>Guidance &amp; Hint</em> before retrying the scenario.
+          </div>
+        `;
+      } else if (report.status === 'warning') {
+        takeawayHtml = `
+          <div class="mt-2 bg-yellow-900/40 p-4 rounded-xl border border-yellow-700 text-sm text-yellow-100">
+            <strong>Next Step:</strong> Adjust your parameters using the guidance above and click <em>Apply &amp; Evaluate</em> again to stabilize the patient.
+          </div>
+        `;
+      } else if (report.status === 'success') {
+        takeawayHtml = `
+          <div class="mt-2 bg-green-900/40 p-4 rounded-xl border border-green-700 text-sm text-green-100">
+            <strong>Clinical Mastery Achieved:</strong> Your ventilator settings match evidence-based guidelines for this condition. Try the next scenario from the selector at the top right!
+          </div>
+        `;
+      }
+
+      const html = `
+        <div class="flex flex-col gap-4 text-base sm:text-lg text-slate-200 leading-relaxed">
+          <p>${report.message}</p>
+          ${takeawayHtml}
+        </div>
+      `;
+      openModal(report.title, html, report.status);
+    }
+
+    // =========================================================================
+    // 6. UI RENDERING & EVENT HANDLERS
+    // =========================================================================
+    function createDialHTML({ key, label, min, max, step, value, unit, disabled }) {
+      return `
+        <div class="p-2.5 sm:p-3 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col justify-between transition-opacity ${
+          disabled ? 'opacity-50 grayscale pointer-events-none' : ''
+        }">
+          <div class="flex justify-between items-baseline gap-1 mb-1">
+            <span class="text-slate-400 font-semibold text-[11px] sm:text-xs uppercase tracking-wider truncate">${label}</span>
+            <span class="text-cyan-400 font-mono font-bold text-sm sm:text-base shrink-0">
+              ${value} <span class="text-[10px] text-slate-400 font-sans">${unit}</span>
+            </span>
+          </div>
+          <div class="flex items-center gap-1.5 my-0.5">
+            <button
+              type="button"
+              data-dial-step="-${step}"
+              data-dial-key="${key}"
+              data-dial-min="${min}"
+              data-dial-max="${max}"
+              ${disabled || value <= min ? 'disabled' : ''}
+              aria-label="Decrease ${label}"
+              class="w-8 h-8 rounded-lg bg-slate-900 hover:bg-slate-700 active:bg-cyan-700 border border-slate-600 text-slate-200 font-bold text-base flex items-center justify-center shrink-0 transition-colors disabled:opacity-40"
+            >-</button>
+            <input
+              type="range"
+              data-dial-range="${key}"
+              min="${min}"
+              max="${max}"
+              step="${step}"
+              value="${value}"
+              ${disabled ? 'disabled' : ''}
+              class="w-full cursor-pointer"
+            />
+            <button
+              type="button"
+              data-dial-step="${step}"
+              data-dial-key="${key}"
+              data-dial-min="${min}"
+              data-dial-max="${max}"
+              ${disabled || value >= max ? 'disabled' : ''}
+              aria-label="Increase ${label}"
+              class="w-8 h-8 rounded-lg bg-slate-900 hover:bg-slate-700 active:bg-cyan-700 border border-slate-600 text-slate-200 font-bold text-base flex items-center justify-center shrink-0 transition-colors disabled:opacity-40"
+            >+</button>
+          </div>
+          <div class="flex justify-between text-[10px] font-mono text-slate-500 mt-0.5">
+            <span>${min} ${unit}</span>
+            <span>${max} ${unit}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function updateSettingValue(key, newVal) {
+      if (state.status === 'fatal') return;
+      ensureAudioContext();
+      state.settings[key] = newVal;
+      if (state.status !== 'idle') {
+        state.status = 'idle';
+        state.statusMsg = 'Parameters adjusted. Click "Apply & Evaluate" to test clinical outcome.';
+      }
+      renderUI();
+    }
+
+    function renderUI() {
+      const scenario = SCENARIOS[state.currentScenarioIndex];
+      const isFatal = state.status === 'fatal';
+      const isInvasive = state.settings.mode === 'VCV' || state.settings.mode === 'PCV';
+      const isCpap = state.settings.mode === 'CPAP';
+      const isBipap = state.settings.mode === 'BiPAP';
+
+      const mechanics = computeVentilatorMechanics(state.settings, scenario);
+
+      const displayPip = isFatal ? 0 : mechanics.isNil ? state.vitals.pip : mechanics.pip;
+      const displayPplat = isFatal ? 0 : mechanics.isNil ? state.vitals.pplat : mechanics.pplat;
+      const displaySpo2 = isFatal
+        ? 0
+        : state.status === 'success'
+        ? state.vitals.spo2
+        : mechanics.isNil
+        ? state.vitals.spo2
+        : mechanics.estimatedSpo2;
+
+      // Active Alarms Calculation
+      const activeAlarms = [];
+      if (!isFatal) {
+        if (displayPip > 35) {
+          activeAlarms.push({ id: 'ppeak', label: `HIGH Ppeak (${displayPip} cmH₂O)`, severity: 'high' });
+        }
+        if (displayPplat > 30) {
+          activeAlarms.push({ id: 'pplat', label: `HIGH Pplat (${displayPplat} cmH₂O)`, severity: 'high' });
+        }
+        if (!mechanics.isNil) {
+          const highVtLimit = Math.round(scenario.patientWeightKg * 8.5);
+          const lowVtLimit = Math.round(scenario.patientWeightKg * 4.5);
+          if (mechanics.effectiveVt > highVtLimit) {
+            activeAlarms.push({ id: 'high_vt', label: `HIGH Vt (${mechanics.effectiveVt} mL)`, severity: 'high' });
+          } else if (mechanics.effectiveVt < lowVtLimit) {
+            activeAlarms.push({ id: 'low_vt', label: `LOW Vt (${mechanics.effectiveVt} mL)`, severity: 'high' });
+          }
+          if (mechanics.trappedVol > 45) {
+            activeAlarms.push({ id: 'autopeep', label: `AUTO-PEEP (+${mechanics.autoPeep} cmH₂O)`, severity: 'medium' });
+          }
+        }
+        if (displaySpo2 < 90 || (!mechanics.isNil && state.settings.fio2 < 25)) {
+          activeAlarms.push({ id: 'low_o2', label: `LOW O₂ (SpO₂ ${displaySpo2}%)`, severity: 'high' });
+        }
+      }
+
+      syncAutoAlarmSound(activeAlarms);
+
+      // Root background & Fatal Overlay
+      const appRoot = document.getElementById('app-root');
+      appRoot.className = `min-h-screen transition-colors duration-500 ${
+        isFatal ? 'bg-red-950' : 'bg-slate-950'
+      } p-2 sm:p-3 lg:p-4 flex flex-col`;
+
+      document.getElementById('fatal-overlay').classList.toggle('hidden', !isFatal);
+
+      // Header styling
+      const header = document.getElementById('main-header');
+      header.className = `mb-3 rounded-xl p-3 sm:p-4 border-2 shadow-lg flex flex-col lg:flex-row gap-3 justify-between items-start lg:items-center transition-colors ${
+        isFatal
+          ? 'bg-red-900/80 border-red-500 animate-pulse shadow-red-900/50'
+          : state.status === 'success'
+          ? 'bg-green-900/40 border-green-700'
+          : state.status === 'warning' || activeAlarms.length > 0
+          ? 'bg-amber-950/50 border-amber-600/80'
+          : 'bg-slate-900 border-slate-700'
+      }`;
+
+      document.getElementById('header-title').textContent = isFatal
+        ? 'CRITICAL SYSTEM FAILURE'
+        : 'Ventilator Cockpit';
+
+      const statusMsgEl = document.getElementById('status-msg');
+      statusMsgEl.textContent = state.statusMsg;
+      statusMsgEl.className = `text-xs sm:text-sm font-medium ${isFatal ? 'text-white' : 'text-slate-300'}`;
+
+      // Audio Toggle Button
+      const audioBtn = document.getElementById('btn-audio-toggle');
+      const audioLabel = document.getElementById('audio-label');
+      audioLabel.textContent = state.isMuted ? 'Audio Muted' : 'Auto-Alarm ON';
+      audioBtn.className = `flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border transition-colors font-semibold ${
+        state.isMuted
+          ? 'bg-slate-800/80 border-slate-600 text-slate-400 hover:text-white'
+          : activeAlarms.length > 0
+          ? 'bg-red-950/90 border-red-500 text-red-200 animate-pulse'
+          : 'bg-emerald-950/80 border-emerald-600/70 text-emerald-300 hover:bg-emerald-900/60'
+      }`;
+
+      // Scenario Select & Reset Button
+      const selectEl = document.getElementById('scenario-select');
+      selectEl.disabled = isFatal;
+      selectEl.className = `w-full bg-slate-800 border px-2.5 py-2 rounded-lg text-xs sm:text-sm font-semibold cursor-pointer outline-none ${
+        isFatal ? 'border-red-400 text-red-100 pointer-events-none opacity-50' : 'border-slate-600 text-cyan-100'
+      }`;
+
+      const resetBtn = document.getElementById('btn-reset-all');
+      resetBtn.className = `font-bold py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-colors shadow-sm text-xs shrink-0 ${
+        isFatal
+          ? 'bg-red-600 hover:bg-red-500 text-white'
+          : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600'
+      }`;
+
+      // Scenario Briefing
+      document.getElementById('scenario-title').textContent = scenario.title;
+      document.getElementById('scenario-meta').textContent = `PBW: ${scenario.patientWeightKg} kg | Drive: ${
+        scenario.spontaneousDrive ? 'Spontaneous' : 'Apneic / Sedated'
+      }`;
+      document.getElementById('scenario-desc').textContent = scenario.description;
+
+      // Alarm Banner
+      const alarmBanner = document.getElementById('alarm-banner');
+      const alarmIcon = document.getElementById('alarm-icon');
+      const alarmTitle = document.getElementById('alarm-title');
+      const alarmPills = document.getElementById('alarm-pills');
+
+      alarmBanner.className = `rounded-xl px-2.5 py-2 border flex flex-wrap items-center justify-between gap-2 transition-colors ${
+        isFatal
+          ? 'bg-red-950 border-red-500 text-red-200'
+          : activeAlarms.length > 0
+          ? 'bg-red-950/75 border-red-500/80 text-red-100'
+          : 'bg-slate-900/90 border-slate-800 text-emerald-400'
+      }`;
+
+      alarmIcon.className = `w-4 h-4 ${
+        isFatal || activeAlarms.length > 0 ? 'text-red-400 animate-bounce' : 'text-emerald-400'
+      }`;
+
+      if (isFatal) {
+        alarmTitle.textContent = 'ALARM: CARDIAC ARREST';
+        alarmPills.innerHTML = `<span class="bg-red-600 text-white text-[10px] font-mono font-black px-2 py-0.5 rounded uppercase">ASYSTOLE / APNEA</span>`;
+      } else if (activeAlarms.length > 0) {
+        alarmTitle.textContent = `VENT ALARMS (${activeAlarms.length})`;
+        alarmPills.innerHTML = activeAlarms
+          .map(
+            (a) =>
+              `<span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded border animate-pulse ${
+                a.severity === 'high' ? 'bg-red-600/90 border-red-300 text-white' : 'bg-amber-600/90 border-amber-300 text-white'
+              }">${a.label}</span>`
+          )
+          .join('');
+      } else {
+        alarmTitle.textContent = 'ALARMS NORMAL';
+        alarmPills.innerHTML = `<span class="text-[10px] font-mono text-emerald-300/90">Ppeak, Pplat, Vt &amp; SpO₂ within safe limits</span>`;
+      }
+
+      // Last Evaluation button visibility
+      document.getElementById('btn-last-eval').classList.toggle('hidden', !state.lastEvaluationReport);
+
+      // Waveform Header & Canvas Overlays
+      const waveTiTe = document.getElementById('wave-tite-badge');
+      if (mechanics.isNil) {
+        waveTiTe.className = 'text-amber-400 font-bold';
+        waveTiTe.textContent = 'STANDBY (ALL 0)';
+      } else {
+        waveTiTe.className = 'text-slate-400';
+        waveTiTe.innerHTML = `Ti:Te <strong class="text-slate-200">${mechanics.tiSec.toFixed(1)}s:${mechanics.teSec.toFixed(1)}s</strong>`;
+      }
+
+      const autoPeepBadge = document.getElementById('wave-autopeep-badge');
+      const hasAirTrapping = !isFatal && mechanics.trappedVol > 45;
+      autoPeepBadge.classList.toggle('hidden', !hasAirTrapping);
+      if (hasAirTrapping) {
+        autoPeepBadge.textContent = `⚠ Auto-PEEP +${mechanics.autoPeep}`;
+      }
+
+      document.getElementById('canvas-paw-overlay').textContent = `Ppeak:${isFatal ? 0 : mechanics.pip} | Pplat:${
+        isFatal ? 0 : mechanics.pplat
+      }`;
+      document.getElementById('canvas-vol-overlay').textContent = `Vt:${isFatal ? 0 : mechanics.effectiveVt}mL | Trap:${
+        isFatal ? 0 : mechanics.trappedVol
+      }mL`;
+
+      // Digital Vitals Readouts
+      const hasPpeakAlarm = activeAlarms.some((a) => a.id === 'ppeak');
+      const hasPplatAlarm = activeAlarms.some((a) => a.id === 'pplat');
+      const hasLowO2Alarm = activeAlarms.some((a) => a.id === 'low_o2');
+
+      document.getElementById('val-hr').textContent = state.vitals.hr;
+      document.getElementById('val-hr').className = `text-lg sm:text-2xl font-mono font-black leading-tight my-0.5 ${
+        isFatal ? 'text-red-500' : 'text-green-500'
+      }`;
+
+      document.getElementById('val-spo2').textContent = displaySpo2;
+      document.getElementById('val-spo2').className = `text-lg sm:text-2xl font-mono font-black leading-tight my-0.5 ${
+        isFatal ? 'text-red-500' : hasLowO2Alarm ? 'text-red-400' : 'text-cyan-400'
+      }`;
+      document.getElementById('box-spo2').className = `bg-slate-900/90 border rounded-lg px-2.5 py-2 flex flex-col justify-between transition-colors ${
+        hasLowO2Alarm && !isFatal ? 'border-red-500/80 bg-red-950/30' : 'border-slate-800'
+      }`;
+      document.getElementById('dot-spo2').classList.toggle('hidden', !(hasLowO2Alarm && !isFatal));
+
+      document.getElementById('val-bp').textContent = state.vitals.bp;
+      document.getElementById('val-bp').className = `text-lg sm:text-2xl font-mono font-black leading-tight my-0.5 ${
+        isFatal ? 'text-red-500' : 'text-red-400'
+      }`;
+
+      document.getElementById('val-ppeak').textContent = displayPip;
+      document.getElementById('val-ppeak').className = `text-lg sm:text-2xl font-mono font-black leading-tight my-0.5 ${
+        isFatal ? 'text-red-500' : hasPpeakAlarm ? 'text-red-400' : 'text-yellow-500'
+      }`;
+      document.getElementById('box-ppeak').className = `bg-slate-900/90 border rounded-lg px-2.5 py-2 flex flex-col justify-between transition-colors ${
+        hasPpeakAlarm && !isFatal ? 'border-red-500/80 bg-red-950/30' : 'border-slate-800'
+      }`;
+      document.getElementById('dot-ppeak').classList.toggle('hidden', !(hasPpeakAlarm && !isFatal));
+
+      document.getElementById('val-pplat').textContent = displayPplat;
+      document.getElementById('val-pplat').className = `text-lg sm:text-2xl font-mono font-black leading-tight my-0.5 ${
+        isFatal ? 'text-red-500' : hasPplatAlarm ? 'text-red-400' : 'text-yellow-600'
+      }`;
+      document.getElementById('box-pplat').className = `bg-slate-900/90 border rounded-lg px-2.5 py-2 flex flex-col justify-between transition-colors ${
+        hasPplatAlarm && !isFatal ? 'border-red-500/80 bg-red-950/30' : 'border-slate-800'
+      }`;
+      document.getElementById('dot-pplat').classList.toggle('hidden', !(hasPplatAlarm && !isFatal));
+
+      // Mode Badge & Buttons
+      document.getElementById('mode-badge').textContent = state.settings.mode
+        ? `MODE: ${state.settings.mode}`
+        : 'MODE: UNSET (0)';
+      document.getElementById('mode-subtext').textContent = isInvasive
+        ? 'Invasive ETT'
+        : isCpap || isBipap
+        ? 'Non-Invasive'
+        : 'Select Mode';
+
+      document.getElementById('mode-card').className = `col-span-2 p-2.5 rounded-xl border border-slate-700 bg-slate-800/50 flex flex-col justify-between ${
+        isFatal ? 'opacity-50 grayscale' : ''
+      }`;
+
+      document.querySelectorAll('.mode-btn').forEach((btn) => {
+        const m = btn.getAttribute('data-mode');
+        btn.disabled = isFatal;
+        btn.className = `mode-btn py-2 rounded-lg text-xs sm:text-sm font-bold transition-colors border ${
+          state.settings.mode === m
+            ? 'bg-cyan-600 border-cyan-400 text-white shadow-md'
+            : 'bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-slate-200'
+        }`;
+      });
+
+      // Calculated Telemetry Bar
+      const cLabel1 = document.getElementById('calc-label-1');
+      const cVal1 = document.getElementById('calc-val-1');
+      const cLabel2 = document.getElementById('calc-label-2');
+      const cVal2 = document.getElementById('calc-val-2');
+
+      if (isBipap) {
+        const ps = Math.max(0, state.settings.ipap - state.settings.peep);
+        cLabel1.textContent = 'Pressure Support';
+        cVal1.textContent = `${ps} cmH₂O (ΔP)`;
+        cLabel2.textContent = 'Est. Vt / EPAP';
+        cVal2.textContent = `${mechanics.effectiveVt} mL / ${state.settings.peep}`;
+      } else if (isCpap) {
+        cLabel1.textContent = 'CPAP Pressure';
+        cVal1.textContent = `${state.settings.peep} cmH₂O`;
+        cLabel2.textContent = 'Est. Vt / FiO2';
+        cVal2.textContent = `${mechanics.effectiveVt} mL / ${state.settings.fio2}%`;
+      } else {
+        const mlPerKg = state.settings.vt > 0 ? (state.settings.vt / scenario.patientWeightKg).toFixed(1) : '0.0';
+        const minVent =
+          state.settings.vt > 0 && state.settings.rr > 0
+            ? ((state.settings.vt * state.settings.rr) / 1000).toFixed(1)
+            : '0.0';
+        cLabel1.textContent = 'Vt / PBW Ratio';
+        cVal1.textContent = `${mlPerKg} mL/kg`;
+        cLabel2.textContent = 'Minute Vent (VE)';
+        cVal2.textContent = `${minVent} L/min`;
+      }
+
+      // Render Context-Aware Dials
+      const dialsContainer = document.getElementById('dynamic-dials');
+      if (isBipap) {
+        dialsContainer.innerHTML =
+          createDialHTML({ key: 'ipap', label: 'IPAP', min: 0, max: 30, step: 1, value: state.settings.ipap, unit: 'cmH2O', disabled: isFatal }) +
+          createDialHTML({ key: 'peep', label: 'EPAP', min: 0, max: 20, step: 1, value: state.settings.peep, unit: 'cmH2O', disabled: isFatal }) +
+          createDialHTML({ key: 'rr', label: 'Backup RR', min: 0, max: 30, step: 1, value: state.settings.rr, unit: 'bpm', disabled: isFatal }) +
+          createDialHTML({ key: 'fio2', label: 'FiO2', min: 0, max: 100, step: 1, value: state.settings.fio2, unit: '%', disabled: isFatal });
+      } else if (isCpap) {
+        dialsContainer.innerHTML =
+          createDialHTML({ key: 'peep', label: 'CPAP Level', min: 0, max: 25, step: 1, value: state.settings.peep, unit: 'cmH2O', disabled: isFatal }) +
+          createDialHTML({ key: 'fio2', label: 'FiO2', min: 0, max: 100, step: 1, value: state.settings.fio2, unit: '%', disabled: isFatal });
+      } else {
+        dialsContainer.innerHTML =
+          createDialHTML({ key: 'vt', label: 'Tidal Vol (Vt)', min: 0, max: 1000, step: 10, value: state.settings.vt, unit: 'mL', disabled: isFatal }) +
+          createDialHTML({ key: 'rr', label: 'Resp Rate', min: 0, max: 40, step: 1, value: state.settings.rr, unit: 'bpm', disabled: isFatal }) +
+          createDialHTML({ key: 'peep', label: 'PEEP', min: 0, max: 25, step: 1, value: state.settings.peep, unit: 'cmH2O', disabled: isFatal }) +
+          createDialHTML({ key: 'fio2', label: 'FiO2', min: 0, max: 100, step: 1, value: state.settings.fio2, unit: '%', disabled: isFatal }) +
+          `
+          <div class="col-span-2 p-2.5 rounded-xl border border-slate-700 bg-slate-800/50 flex items-center justify-between gap-3 ${
+            isFatal ? 'opacity-50 grayscale' : ''
+          }">
+            <span class="text-slate-400 font-semibold text-xs uppercase tracking-wider shrink-0">I:E Ratio</span>
+            <select
+              id="ie-select"
+              ${isFatal ? 'disabled' : ''}
+              class="w-44 sm:w-56 bg-slate-900 border border-slate-600 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm text-cyan-400 font-bold outline-none cursor-pointer"
+            >
+              <option value="" ${state.settings.ie === '' ? 'selected' : ''}>0 / Unset (--)</option>
+              <option value="1:1" ${state.settings.ie === '1:1' ? 'selected' : ''}>1:1 (Equal I:E)</option>
+              <option value="1:2" ${state.settings.ie === '1:2' ? 'selected' : ''}>1:2 (Normal)</option>
+              <option value="1:3" ${state.settings.ie === '1:3' ? 'selected' : ''}>1:3 (Prolonged Exp)</option>
+              <option value="1:4" ${state.settings.ie === '1:4' ? 'selected' : ''}>1:4 (Max Exp Time)</option>
+            </select>
+          </div>
+          `;
+      }
+
+      // Apply Button State
+      const applyBtn = document.getElementById('btn-apply');
+      applyBtn.disabled = isFatal;
+      applyBtn.className = `w-full py-3 rounded-xl font-black text-sm sm:text-base tracking-widest uppercase transition-all shadow-lg flex items-center justify-center gap-2 ${
+        isFatal
+          ? 'bg-slate-800 text-slate-600 cursor-not-allowed shadow-none'
+          : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-cyan-900/50 active:scale-[0.98]'
+      }`;
+      document.getElementById('apply-label').textContent = isFatal ? 'System Locked' : 'Apply & Evaluate';
+      document.getElementById('apply-icon').className = `w-5 h-5 ${
+        isFatal ? 'text-slate-600' : 'text-white animate-pulse'
+      }`;
+    }
+
+    function resetScenario(index = state.currentScenarioIndex) {
+      state.currentScenarioIndex = index;
+      state.status = 'idle';
+      state.statusMsg = 'Settings reset to 0 (nil). Select a mode and dial parameters.';
+      state.vitals = { ...SCENARIOS[index].baselineVitals };
+      state.settings = { mode: '', vt: 0, rr: 0, peep: 0, ipap: 0, fio2: 0, ie: '' };
+      state.lastEvaluationReport = null;
+      document.getElementById('scenario-select').value = String(index);
+      closeModal();
+      renderUI();
+    }
+
+    function handleApplyEvaluation() {
+      if (state.status === 'fatal') return;
+      ensureAudioContext();
+
+      if (!state.settings.mode) {
+        state.status = 'warning';
+        state.statusMsg = 'Ventilator is in Standby (All settings at 0). Select a mode first.';
+        renderUI();
+        showEvaluationModal({
+          status: 'warning',
+          title: 'Ventilator Settings Still at 0 (Nil)',
+          message:
+            'All settings reset to 0 when a scenario is loaded. Please choose a Ventilation Mode (VCV, PCV, CPAP, or BiPAP) and dial in your clinical parameters before applying.'
+        });
+        return;
+      }
+
+      const scenario = SCENARIOS[state.currentScenarioIndex];
+      const evaluation = scenario.evaluate(state.settings);
+      state.status = evaluation.status;
+      state.statusMsg = evaluation.msg;
+
+      const report = {
+        status: evaluation.status,
+        title: evaluation.msg,
+        message: evaluation.feedback
+      };
+      state.lastEvaluationReport = report;
+
+      if (evaluation.status === 'fatal') {
+        state.vitals = { spo2: 0, hr: 0, pip: 0, pplat: 0, bp: "0/0" };
+        playFlatlineTone();
+      } else if (evaluation.status === 'success') {
+        state.vitals = {
+          spo2: scenario.id === 4 ? 91 : Math.floor(Math.random() * 4) + 95,
+          hr: Math.floor(Math.random() * 10) + 74,
+          pip:
+            state.settings.mode === 'CPAP'
+              ? state.settings.peep
+              : state.settings.mode === 'BiPAP'
+              ? state.settings.ipap
+              : scenario.id === 2
+              ? 32
+              : scenario.id === 1
+              ? 28
+              : 19,
+          pplat:
+            state.settings.mode === 'CPAP'
+              ? state.settings.peep
+              : state.settings.mode === 'BiPAP'
+              ? state.settings.ipap
+              : scenario.id === 1
+              ? 24
+              : 15,
+          bp: "120/78"
+        };
+      } else {
+        state.vitals = {
+          spo2: Math.floor(Math.random() * 5) + 86,
+          hr: Math.floor(Math.random() * 16) + 110,
+          pip:
+            state.settings.mode === 'CPAP'
+              ? state.settings.peep
+              : state.settings.mode === 'BiPAP'
+              ? state.settings.ipap
+              : Math.max(15, scenario.baselineVitals.pip - 5),
+          pplat:
+            state.settings.mode === 'CPAP'
+              ? state.settings.peep
+              : state.settings.mode === 'BiPAP'
+              ? state.settings.ipap
+              : Math.max(12, scenario.baselineVitals.pplat - 2),
+          bp: "102/66"
+        };
+      }
+
+      renderUI();
+      showEvaluationModal(report);
+    }
+
+    // =========================================================================
+    // 7. REAL-TIME CANVAS SCALAR WAVEFORM ENGINE (ECG, PAW, VOLUME)
+    // =========================================================================
+    function startWaveformLoop() {
+      const canvas = document.getElementById('ventilator-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      let xPos = 48;
+      let elapsedTime = 0;
+      let prevPts = null;
+      let lastBeatIndex = -1;
+
+      const leftPad = 48;
+      const rightPad = 10;
+
+      const resizeCanvas = () => {
+        const parent = canvas.parentElement;
+        if (!parent) return;
+        canvas.width = parent.clientWidth;
+        canvas.height = parent.clientHeight;
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        xPos = leftPad;
+        prevPts = null;
+      };
+
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      const getEcgDeflection = (t) => {
+        if (t > 0.1 && t < 0.18) return -Math.sin(((t - 0.1) / 0.08) * Math.PI) * 4;
+        if (t >= 0.22 && t < 0.25) return ((t - 0.22) / 0.03) * 5;
+        if (t >= 0.25 && t < 0.29) return 5 - Math.sin(((t - 0.25) / 0.04) * Math.PI) * 24;
+        if (t >= 0.29 && t < 0.33) return Math.sin(((t - 0.29) / 0.04) * Math.PI) * 8;
+        if (t >= 0.45 && t < 0.62) return -Math.sin(((t - 0.45) / 0.17) * Math.PI) * 6;
+        return 0;
+      };
+
+      const drawYAxisScales = (width, height) => {
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(0, 0, leftPad - 2, height);
+
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(leftPad - 2, 0);
+        ctx.lineTo(leftPad - 2, height);
+        ctx.stroke();
+
+        ctx.font = '10px JetBrains Mono, monospace';
+        ctx.textAlign = 'right';
+
+        const pTop = height * 0.17;
+        const pBot = height * 0.51;
+        const mapP = (val) => pBot - (Math.min(65, Math.max(0, val)) / 65) * (pBot - pTop);
+
+        ctx.fillStyle = '#facc15';
+        [60, 30, 0].forEach((val) => {
+          ctx.fillText(String(val), leftPad - 6, mapP(val) + 3);
+        });
+
+        const vTop = height * 0.62;
+        const vBot = height * 0.95;
+        const mapV = (val) => vBot - (Math.min(1050, Math.max(0, val)) / 1050) * (vBot - vTop);
+
+        ctx.fillStyle = '#38bdf8';
+        [1000, 500, 0].forEach((val) => {
+          ctx.fillText(String(val), leftPad - 6, mapV(val) + 3);
+        });
+
+        ctx.strokeStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.moveTo(0, height * 0.12);
+        ctx.lineTo(width, height * 0.12);
+        ctx.moveTo(0, height * 0.55);
+        ctx.lineTo(width, height * 0.55);
+        ctx.stroke();
+      };
+
+      const drawFrame = () => {
+        const width = canvas.width;
+        const height = canvas.height;
+        if (width <= leftPad + rightPad || height === 0) {
+          requestAnimationFrame(drawFrame);
+          return;
+        }
+
+        const scenario = SCENARIOS[state.currentScenarioIndex];
+        const mechanics = computeVentilatorMechanics(state.settings, scenario);
+        const isFatal = state.status === 'fatal';
+        const peep = state.settings.peep || 0;
+
+        drawYAxisScales(width, height);
+
+        const ecgBaseY = height * 0.075;
+        const pTop = height * 0.17;
+        const pBot = height * 0.51;
+        const vTop = height * 0.62;
+        const vBot = height * 0.95;
+
+        const mapP = (val) => pBot - (Math.min(65, Math.max(0, val)) / 65) * (pBot - pTop);
+        const mapV = (val) => vBot - (Math.min(1050, Math.max(0, val)) / 1050) * (vBot - vTop);
+
+        const sweepWidth = width - leftPad - rightPad;
+        const windowSeconds = 8;
+        const dt = 0.016;
+        const dx = (dt / windowSeconds) * sweepWidth;
+
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(xPos, 0, Math.max(12, dx + 8), height);
+
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(xPos, pBot);
+        ctx.lineTo(xPos + dx, pBot);
+        ctx.moveTo(xPos, vBot);
+        ctx.lineTo(xPos + dx, vBot);
+        ctx.stroke();
+
+        ctx.save();
+        ctx.setLineDash([3, 3]);
+        ctx.strokeStyle = 'rgba(250, 204, 21, 0.35)';
+        ctx.beginPath();
+        ctx.moveTo(xPos, mapP(peep));
+        ctx.lineTo(xPos + dx, mapP(peep));
+        ctx.stroke();
+
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.35)';
+        ctx.beginPath();
+        ctx.moveTo(xPos, mapP(30));
+        ctx.lineTo(xPos + dx, mapP(30));
+        ctx.stroke();
+        ctx.restore();
+
+        elapsedTime += dt;
+
+        const effectiveHr = isFatal ? 0 : Math.max(40, state.vitals.hr || 75);
+        const totalBeats = effectiveHr > 0 ? elapsedTime * (effectiveHr / 60) : 0;
+        const currentBeatIndex = Math.floor(totalBeats);
+        const ecgCycle = effectiveHr > 0 ? totalBeats % 1 : 0;
+
+        const displaySpo2 = isFatal
+          ? 0
+          : state.status === 'success'
+          ? state.vitals.spo2
+          : mechanics.isNil
+          ? state.vitals.spo2
+          : mechanics.estimatedSpo2;
+
+        if (!isFatal && effectiveHr > 0 && ecgCycle >= 0.26 && currentBeatIndex !== lastBeatIndex) {
+          lastBeatIndex = currentBeatIndex;
+          playQrsBeep(displaySpo2);
+        }
+
+        const cycleT = mechanics.totalCycleSec > 0 ? elapsedTime % mechanics.totalCycleSec : 0;
+
+        // Instantaneous Pressure Paw(t)
+        let pawVal = 0;
+        if (!isFatal && !mechanics.isNil) {
+          if (mechanics.isCpap) {
+            if (mechanics.rr === 0 || mechanics.effectiveVt === 0) {
+              pawVal = peep;
+            } else if (cycleT < mechanics.tiSec) {
+              pawVal = Math.max(0, peep - Math.sin((cycleT / mechanics.tiSec) * Math.PI) * 1.8);
+            } else {
+              const expFrac = (cycleT - mechanics.tiSec) / Math.max(0.1, mechanics.teSec);
+              pawVal = peep + Math.sin(expFrac * Math.PI) * 1.4;
+            }
+          } else if (mechanics.rr === 0 || (mechanics.effectiveVt === 0 && !mechanics.isBipap)) {
+            pawVal = peep;
+          } else if (cycleT < mechanics.tiSec) {
+            const u = cycleT / mechanics.tiSec;
+            if (state.settings.mode === 'PCV' || mechanics.isBipap) {
+              const rise = Math.min(1, u / 0.08);
+              pawVal = peep + (mechanics.pip - peep) * rise;
+            } else {
+              const pInit = peep + (mechanics.pip - mechanics.pplat) * 0.85;
+              if (u < 0.08) {
+                pawVal = peep + (pInit - peep) * (u / 0.08);
+              } else if (u < 0.86) {
+                pawVal = pInit + (mechanics.pip - pInit) * ((u - 0.08) / 0.78);
+              } else {
+                pawVal = mechanics.pplat;
+              }
+            }
+          } else {
+            const expFrac = Math.min(1, (cycleT - mechanics.tiSec) / Math.max(0.1, mechanics.teSec));
+            pawVal = peep + (mechanics.pplat - peep) * Math.exp(-expFrac * 5.5);
+          }
+        }
+
+        // Instantaneous Volume V(t)
+        let volVal = 0;
+        if (!isFatal && !mechanics.isNil && mechanics.rr > 0 && mechanics.effectiveVt > 0) {
+          if (cycleT < mechanics.tiSec) {
+            const u = cycleT / mechanics.tiSec;
+            if (mechanics.isCpap) {
+              volVal = Math.sin((u * Math.PI) / 2) * mechanics.effectiveVt;
+            } else if (state.settings.mode === 'PCV' || mechanics.isBipap) {
+              const norm = (1 - Math.exp(-4.2 * u)) / (1 - Math.exp(-4.2));
+              volVal = mechanics.trappedVol + mechanics.effectiveVt * norm;
+            } else {
+              volVal = mechanics.trappedVol + mechanics.effectiveVt * Math.min(1, u / 0.86);
+            }
+          } else {
+            const expT = cycleT - mechanics.tiSec;
+            if (mechanics.isCpap) {
+              const expFrac = Math.min(1, expT / Math.max(0.1, mechanics.teSec));
+              volVal = mechanics.effectiveVt * Math.exp(-expFrac * 4.5);
+            } else {
+              volVal = (mechanics.trappedVol + mechanics.effectiveVt) * Math.exp(-expT / mechanics.tauE);
+            }
+          }
+        }
+
+        const curEcgY = isFatal ? ecgBaseY : ecgBaseY + getEcgDeflection(ecgCycle);
+        const curPawY = mapP(pawVal);
+        const curVolY = mapV(volVal);
+
+        if (prevPts && xPos > leftPad) {
+          ctx.strokeStyle = isFatal ? '#ef4444' : '#22c55e';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(prevPts.x, prevPts.ecgY);
+          ctx.lineTo(xPos, curEcgY);
+          ctx.stroke();
+
+          ctx.strokeStyle = isFatal ? '#ef4444' : '#facc15';
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          ctx.moveTo(prevPts.x, prevPts.pawY);
+          ctx.lineTo(xPos, curPawY);
+          ctx.stroke();
+
+          ctx.fillStyle = isFatal ? 'rgba(239, 68, 68, 0.12)' : 'rgba(250, 204, 21, 0.12)';
+          ctx.beginPath();
+          ctx.moveTo(prevPts.x, pBot);
+          ctx.lineTo(prevPts.x, prevPts.pawY);
+          ctx.lineTo(xPos, curPawY);
+          ctx.lineTo(xPos, pBot);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.strokeStyle = isFatal ? '#ef4444' : '#38bdf8';
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          ctx.moveTo(prevPts.x, prevPts.volY);
+          ctx.lineTo(xPos, curVolY);
+          ctx.stroke();
+
+          ctx.fillStyle = isFatal ? 'rgba(239, 68, 68, 0.12)' : 'rgba(56, 189, 248, 0.14)';
+          ctx.beginPath();
+          ctx.moveTo(prevPts.x, vBot);
+          ctx.lineTo(prevPts.x, prevPts.volY);
+          ctx.lineTo(xPos, curVolY);
+          ctx.lineTo(xPos, vBot);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        prevPts = { x: xPos, ecgY: curEcgY, pawY: curPawY, volY: curVolY };
+        xPos += dx;
+
+        if (xPos >= width - rightPad) {
+          xPos = leftPad;
+          prevPts = null;
+        }
+
+        requestAnimationFrame(drawFrame);
+      };
+
+      requestAnimationFrame(drawFrame);
+    }
+
+    // =========================================================================
+    // 8. INITIALIZATION & EVENT LISTENERS
+    // =========================================================================
+    window.addEventListener('DOMContentLoaded', () => {
+      // Populate 10-scenario dropdown
+      const selectEl = document.getElementById('scenario-select');
+      SCENARIOS.forEach((s, idx) => {
+        const opt = document.createElement('option');
+        opt.value = String(idx);
+        opt.textContent = s.title;
+        selectEl.appendChild(opt);
+      });
+
+      selectEl.addEventListener('change', (e) => {
+        resetScenario(Number(e.target.value));
+      });
+
+      document.getElementById('btn-reset-all').addEventListener('click', () => {
+        resetScenario(state.currentScenarioIndex);
+      });
+
+      document.getElementById('btn-fatal-retry').addEventListener('click', () => {
+        resetScenario(state.currentScenarioIndex);
+      });
+
+      document.getElementById('btn-fatal-report').addEventListener('click', () => {
+        showEvaluationModal(state.lastEvaluationReport);
+      });
+
+      document.getElementById('btn-last-eval').addEventListener('click', () => {
+        showEvaluationModal(state.lastEvaluationReport);
+      });
+
+      document.getElementById('btn-guidelines').addEventListener('click', showGuidelinesModal);
+      document.getElementById('btn-hint').addEventListener('click', showHintModal);
+      document.getElementById('btn-modal-close-top').addEventListener('click', closeModal);
+      document.getElementById('btn-modal-close-bottom').addEventListener('click', closeModal);
+
+      document.getElementById('btn-audio-toggle').addEventListener('click', () => {
+        state.isMuted = !state.isMuted;
+        if (!state.isMuted) ensureAudioContext();
+        renderUI();
+      });
+
+      // Mode buttons
+      document.getElementById('mode-buttons').addEventListener('click', (e) => {
+        const btn = e.target.closest('.mode-btn');
+        if (!btn || state.status === 'fatal') return;
+        const modeOption = btn.getAttribute('data-mode');
+        ensureAudioContext();
+        state.settings.mode = modeOption;
+        if ((modeOption === 'VCV' || modeOption === 'PCV') && !state.settings.ie) {
+          state.settings.ie = '1:2';
+        }
+        if (state.status !== 'idle') {
+          state.status = 'idle';
+          state.statusMsg = 'Mode selected. Adjust parameters and click "Apply & Evaluate".';
+        }
+        renderUI();
+      });
+
+      // Delegated events for dynamic dials & I:E select
+      const dialsContainer = document.getElementById('dynamic-dials');
+
+      dialsContainer.addEventListener('click', (e) => {
+        const stepBtn = e.target.closest('[data-dial-step]');
+        if (!stepBtn || state.status === 'fatal') return;
+        const key = stepBtn.getAttribute('data-dial-key');
+        const delta = Number(stepBtn.getAttribute('data-dial-step'));
+        const min = Number(stepBtn.getAttribute('data-dial-min'));
+        const max = Number(stepBtn.getAttribute('data-dial-max'));
+        const nextVal = Math.min(max, Math.max(min, (state.settings[key] || 0) + delta));
+        updateSettingValue(key, nextVal);
+      });
+
+      dialsContainer.addEventListener('input', (e) => {
+        const rangeInput = e.target.closest('[data-dial-range]');
+        if (!rangeInput || state.status === 'fatal') return;
+        const key = rangeInput.getAttribute('data-dial-range');
+        updateSettingValue(key, Number(rangeInput.value));
+      });
+
+      dialsContainer.addEventListener('change', (e) => {
+        if (e.target && e.target.id === 'ie-select') {
+          updateSettingValue('ie', e.target.value);
+        }
+      });
+
+      document.getElementById('btn-apply').addEventListener('click', handleApplyEvaluation);
+
+      // Start initial render & waveform loop
+      resetScenario(0);
+      startWaveformLoop();
+    });
+  </script>
+</body>
+</html>
