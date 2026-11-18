@@ -1,9 +1,9 @@
-
+<!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ventilator Cockpit — Clinical ICU Simulator</title>
+  <title>EDHKN Ventilator Cockpit — Clinical Simulator</title>
 
   <!-- Google Fonts: Inter & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -68,12 +68,180 @@
       border: 2px solid #cffafe;
       box-shadow: 0 0 6px rgba(6, 182, 212, 0.6);
     }
+
+    /* Floating Navigation Header (Hospital Kuala Nerang) */
+    nav.portal-nav {
+      position: sticky;
+      top: 12px;
+      z-index: 40;
+      max-width: 900px;
+      margin: 12px auto 4px;
+      width: calc(100% - 24px);
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(10px);
+      border-radius: 50px;
+      padding: 10px 24px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      text-decoration: none;
+      color: #2c3e50;
+    }
+
+    .dept-logo {
+      height: 48px !important;
+      width: auto !important;
+      object-fit: contain;
+    }
+
+    .logo-text {
+      font-size: 1.1rem;
+      font-weight: 700;
+      line-height: 1.2;
+      display: flex;
+      flex-direction: column;
+      color: #2c3e50;
+    }
+
+    .logo-text span {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #7f8c8d;
+    }
+
+    /* Single-Line Portal Footer */
+    footer.portal-footer {
+      margin-top: auto;
+      background: #ffffff;
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+      padding: 14px 20px;
+      width: 100%;
+    }
+
+    .footer-container {
+      max-width: 950px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: nowrap;
+    }
+
+    .footer-logos {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .footer-logos img {
+      height: 34px !important;
+      width: auto !important;
+      object-fit: contain;
+    }
+
+    .logo-divider {
+      width: 1px;
+      height: 22px;
+      background-color: #cbd5e1;
+    }
+
+    .footer-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #475569;
+      background: #e2e8f0;
+      padding: 4px 12px;
+      border-radius: 20px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background-color: #22c55e;
+      border-radius: 50%;
+      box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+      animation: portalPulse 1.8s infinite;
+    }
+
+    @keyframes portalPulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    }
+
+    .footer-copyright {
+      font-size: 0.82rem;
+      color: #94a3b8;
+      margin: 0;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .footer-copyright span {
+      color: #334155;
+      font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      nav.portal-nav {
+        padding: 8px 16px;
+      }
+      .dept-logo {
+        height: 38px !important;
+      }
+      .logo-text {
+        font-size: 0.95rem;
+      }
+      .logo-text span {
+        font-size: 0.72rem;
+      }
+      .footer-container {
+        gap: 8px;
+      }
+      .footer-logos img {
+        height: 26px !important;
+      }
+      .footer-status, .footer-copyright {
+        font-size: 0.72rem;
+      }
+    }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-200 font-sans antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
+<body class="bg-slate-950 text-slate-200 font-sans antialiased selection:bg-cyan-500/30 selection:text-cyan-200 min-h-screen flex flex-col">
+  <!-- Navigasi Utama Terapung -->
+  <nav class="portal-nav">
+    <a href="index.html" class="logo-group">
+      <img
+        src="https://lh3.googleusercontent.com/d/1O2Nj1Dr4U6wo7ISjdkDRukPYwZUkOOuJ"
+        onerror="this.onerror=null;this.src='https://placehold.co/96x96/2c3e50/ffffff?text=HKN';"
+        alt="Logo Jabatan"
+        class="dept-logo"
+      />
+      <div class="logo-text">
+        Hospital Kuala Nerang
+        <span>Jabatan Kecemasan &amp; Trauma</span>
+      </div>
+    </a>
+  </nav>
+
   <!-- MAIN APP CONTAINER -->
-  <div id="app-root" class="min-h-screen transition-colors duration-500 bg-slate-950 p-2 sm:p-3 lg:p-4 flex flex-col">
-    
+  <div id="app-root" class="flex-1 transition-colors duration-500 bg-slate-950 p-2 sm:p-3 lg:p-4 flex flex-col">
     <!-- COMPACT HEADER / STATUS & SCENARIO BAR -->
     <header
       id="main-header"
@@ -91,7 +259,7 @@
           </span>
 
           <h1 id="header-title" class="text-base sm:text-xl font-bold text-white uppercase tracking-wider">
-            Ventilator Cockpit
+            EDHKN Ventilator Cockpit
           </h1>
 
           <!-- Guidelines Button -->
@@ -155,7 +323,6 @@
 
     <!-- MAIN COMPACT COCKPIT GRID -->
     <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 relative">
-      
       <!-- FATAL OVERLAY (Hidden unless fatal outcome occurs) -->
       <div
         id="fatal-overlay"
@@ -201,7 +368,6 @@
 
       <!-- LEFT COLUMN: Scenario Briefing, Ventilator Alarms & Physiological Monitor -->
       <section class="lg:col-span-7 flex flex-col gap-3 sm:gap-4">
-        
         <!-- Scenario Case Card -->
         <div class="bg-slate-900 border border-slate-700 rounded-xl p-3 sm:p-4 shadow-md flex flex-col">
           <div class="flex flex-wrap justify-between items-center gap-2 mb-2 border-b border-slate-800 pb-2">
@@ -231,7 +397,6 @@
 
         <!-- Bedside Vitals & Ventilator Alarm Monitor -->
         <div class="bg-black border-2 border-slate-800 rounded-2xl p-3 flex flex-col gap-2.5 shadow-2xl relative overflow-hidden">
-          
           <!-- Active Ventilator Alarm Strip -->
           <div
             id="alarm-banner"
@@ -467,6 +632,27 @@
     </main>
   </div>
 
+  <!-- Footer (Single-Line, Non-Stacking) -->
+  <footer class="portal-footer">
+    <div class="footer-container">
+      <div class="footer-logos">
+        <img
+          src="https://lh3.googleusercontent.com/d/1O2Nj1Dr4U6wo7ISjdkDRukPYwZUkOOuJ"
+          onerror="this.onerror=null;this.src='https://placehold.co/68x68/2c3e50/ffffff?text=HKN';"
+          alt="HKN Logo"
+        />
+        <div class="logo-divider"></div>
+        <img
+          src="https://lh3.googleusercontent.com/d/1LdMRx-PF49CWOcrjthClGLJg-yQoJ2mt"
+          onerror="this.onerror=null;this.src='https://placehold.co/68x68/0f766e/ffffff?text=MOH';"
+          alt="MOH Logo"
+        />
+      </div>
+      <div class="footer-status"><span class="pulse-dot"></span><span>EDHKN PORTAL Ver 2.0</span></div>
+      <p class="footer-copyright">© 2026 <span>Yassin Razak</span> | All Rights Reserved</p>
+    </div>
+  </footer>
+
   <!-- REUSABLE MODAL OVERLAY -->
   <div
     id="app-modal"
@@ -512,7 +698,7 @@
   <!-- APPLICATION SCRIPT -->
   <script>
     // =========================================================================
-    // 1. CLINICAL SCENARIO DEFINITIONS (10 CASES)
+    // 1. CLINICAL SCENARIO DEFINITIONS (20 CASES)
     // =========================================================================
     const SCENARIOS = [
       {
@@ -1129,6 +1315,639 @@
             feedback: `Good choice using BiPAP! Target IPAP 14–20 cmH2O, EPAP 7–10 cmH2O (to overcome chest-wall weight), Backup RR 12–16 bpm, and FiO2 30–60%.`
           };
         }
+      },
+      {
+        id: 11,
+        title: "Scenario 11: Severe DKA with Kussmaul Compensation (55kg Female)",
+        patientWeightKg: 55,
+        spontaneousDrive: false,
+        description:
+          "55kg female (PBW 55kg) intubated for airway protection due to severe Diabetic Ketoacidosis (DKA) and obtundation (GCS 7). Pre-intubation ABG: pH 6.94, PaCO2 16 mmHg, HCO3- 3.4 mmol/L, Anion Gap 32, K+ 5.8 mmol/L, Glucose 38 mmol/L, SpO2 98%, RR 36 bpm (deep Kussmaul breathing). Lungs are clear with normal compliance.",
+        pathophysiology:
+          "In profound metabolic acidosis (HCO3- 3.4 mmol/L), extreme compensatory hyperventilation (PaCO2 16 mmHg) is the only buffer keeping arterial pH above a lethal threshold. If mechanical ventilation drops minute ventilation to 'normal' levels (e.g., RR 12), PaCO2 surges above 40 mmHg, crashing pH below 6.75 and triggering extracellular potassium shift and hyperkalemic cardiac arrest.",
+        treatmentGoal:
+          "High Minute Ventilation Acidosis-Matching Strategy (VCV/PCV): Match the patient's pre-intubation minute ventilation while avoiding volutrauma. Set RR 22–30 bpm, Vt 380–460 mL (7–8.3 mL/kg PBW), physiological PEEP 5–8 cmH2O, and FiO2 30–50%.",
+        baselineVitals: { spo2: 96, hr: 138, pip: 18, pplat: 14, bp: "96/58" },
+        evaluate: (settings) => {
+          if (settings.mode === 'CPAP' || settings.mode === 'BiPAP') {
+            return {
+              status: 'fatal',
+              msg: "Unprotected Airway, Aspiration & Severe Acidotic Arrest",
+              feedback: `This DKA patient is obtunded (GCS 7) and already intubated for airway protection. Non-invasive ${settings.mode} cannot guarantee high mandatory minute ventilation or protect against aspiration of gastric contents, causing pH to plummet below 6.75 and cardiac arrest.`
+            };
+          }
+          if (settings.rr < 18 || settings.vt < 330) {
+            return {
+              status: 'fatal',
+              msg: "Abolished Kussmaul Compensation & Hyperkalemic Cardiac Arrest",
+              feedback: `Critical DKA trap! You set RR to ${settings.rr} bpm and Vt to ${settings.vt} mL (Minute Ventilation ${(
+                (settings.vt * settings.rr) /
+                1000
+              ).toFixed(1)} L/min). Dropping minute ventilation caused PaCO2 to spike from 16 to >45 mmHg, crashing arterial pH below 6.75 and triggering fatal hyperkalemic asystole. Match Kussmaul demand with RR 22–30 bpm!`
+            };
+          }
+          if (settings.vt > 550 || settings.peep > 14) {
+            return {
+              status: 'fatal',
+              msg: "Iatrogenic Volutrauma & Preload Collapse in Volume-Depleted DKA",
+              feedback: `DKA patients are profoundly volume-depleted (5–8 L deficit). Excessive Vt (${settings.vt} mL = ${(
+                settings.vt / 55
+              ).toFixed(1)} mL/kg PBW) or high PEEP (${settings.peep} cmH2O) caused alveolar overdistension and acute hypotensive collapse.`
+            };
+          }
+          if (
+            settings.rr >= 22 &&
+            settings.rr <= 30 &&
+            settings.vt >= 380 &&
+            settings.vt <= 460 &&
+            settings.peep >= 5 &&
+            settings.peep <= 8 &&
+            settings.fio2 >= 30
+          ) {
+            return {
+              status: 'success',
+              msg: "Kussmaul Minute Ventilation Preserved & pH Stabilized",
+              feedback: `Masterful critical care! Setting RR ${settings.rr} bpm and Vt ${settings.vt} mL (~${(
+                settings.vt / 55
+              ).toFixed(1)} mL/kg PBW) delivered ${((settings.vt * settings.rr) / 1000).toFixed(
+                1
+              )} L/min of minute ventilation, maintaining hypocapnic respiratory compensation while avoiding volutrauma.`
+            };
+          }
+          return {
+            status: 'warning',
+            msg: "Suboptimal Minute Ventilation for Severe Metabolic Acidosis",
+            feedback: `The patient survived, but refine settings to safely sustain respiratory compensation: RR 22–30 bpm, Vt 380–460 mL (7–8.3 mL/kg PBW), PEEP 5–8 cmH2O, and FiO2 30–50%.`
+          };
+        }
+      },
+      {
+        id: 12,
+        title: "Scenario 12: Post-ROSC Cardiac Arrest with Mixed Acidosis (75kg Male)",
+        patientWeightKg: 75,
+        spontaneousDrive: false,
+        description:
+          "75kg male 10 minutes post-ROSC after a 18-minute out-of-hospital VF cardiac arrest. Comatose (GCS 3), intubated, on norepinephrine 0.2 mcg/kg/min (BP 94/58 mmHg, HR 104 bpm, SpO2 89%). Post-ROSC ABG: pH 7.12, PaCO2 58 mmHg, PaO2 59 mmHg, Lactate 8.4 mmol/L.",
+        pathophysiology:
+          "Post-cardiac arrest syndrome combines myocardial stunning, cerebral ischemia-reperfusion injury, and mixed metabolic/respiratory acidosis. Both hypoxemia AND severe hyperoxia (FiO2 100% generating reactive oxygen species) worsen neurological injury, while hypocapnia (PaCO2 < 35 mmHg) causes cerebral vasoconstriction and hypercapnia (> 45 mmHg) spikes ICP.",
+        treatmentGoal:
+          "Post-ROSC Neuro- & Hemodynamic-Protective Strategy (VCV/PCV): Target normocapnia (PaCO2 35–45 mmHg) and normoxia (SpO2 94–98%, avoiding 100% hyperoxia!). Use Vt 450–560 mL (6–7.5 mL/kg PBW), RR 16–22 bpm, low-moderate PEEP 5–8 cmH2O, and titrated FiO2 40–70%.",
+        baselineVitals: { spo2: 89, hr: 104, pip: 22, pplat: 18, bp: "94/58" },
+        evaluate: (settings) => {
+          if (settings.mode === 'CPAP' || settings.mode === 'BiPAP') {
+            return {
+              status: 'fatal',
+              msg: "Unprotected Airway & Recurrent Hypoxic Arrest",
+              feedback: `A comatose post-ROSC patient (GCS 3) has no airway reflexes and requires invasive VCV or PCV to strictly control PaCO2 and oxygenation. Non-invasive ${settings.mode} led to recurrent arrest.`
+            };
+          }
+          if (settings.peep > 14 || settings.vt > 700) {
+            return {
+              status: 'fatal',
+              msg: "Post-Arrest Myocardial Stunning Collapse & Cerebral Venous Congestion",
+              feedback: `High PEEP (${settings.peep} cmH2O) or excessive Vt (${settings.vt} mL) crushed venous return to a stunned post-arrest heart and impeded jugular venous outflow, causing refractory shock and re-arrest.`
+            };
+          }
+          if (settings.rr < 12 || settings.vt < 360 || settings.fio2 < 35) {
+            return {
+              status: 'fatal',
+              msg: "Worsening Acidosis, Hypoxemia & Recurrent VF Arrest",
+              feedback: `Insufficient ventilation (Vt ${settings.vt} mL, RR ${settings.rr} bpm) or FiO2 (${settings.fio2}%) worsened hypercapnic acidosis (pH < 7.05) and hypoxemia, triggering recurrent ventricular fibrillation.`
+            };
+          }
+          if (settings.rr > 26 && settings.vt >= 500) {
+            return {
+              status: 'fatal',
+              msg: "Severe Hypocapnic Cerebral Vasoconstriction & Anoxic Brain Death",
+              feedback: `Aggressive hyperventilation (RR ${settings.rr} bpm, Vt ${settings.vt} mL) drove PaCO2 below 25 mmHg, causing severe cerebral vasoconstriction and secondary ischemic brain injury.`
+            };
+          }
+          if (settings.fio2 >= 90) {
+            return {
+              status: 'warning',
+              msg: "Hyperoxia Warning: Titrate FiO2 Down to Prevent Reperfusion Brain Injury",
+              feedback: `Your ventilation parameters stabilized circulation, but leaving FiO2 at ${settings.fio2}% causes arterial hyperoxia (PaO2 > 300 mmHg), generating toxic free radicals in post-ischemic neurons. Titrate FiO2 to 40–70% (target SpO2 94–98%).`
+            };
+          }
+          if (
+            settings.vt >= 450 &&
+            settings.vt <= 560 &&
+            settings.rr >= 16 &&
+            settings.rr <= 22 &&
+            settings.peep >= 5 &&
+            settings.peep <= 8 &&
+            settings.fio2 >= 40 &&
+            settings.fio2 <= 75
+          ) {
+            return {
+              status: 'success',
+              msg: "Post-ROSC Normocapnia & Targeted Normoxia Achieved",
+              feedback: `Outstanding resuscitation! Vt ${settings.vt} mL and RR ${settings.rr} bpm corrected hypercapnic acidosis to normocapnia, PEEP ${settings.peep} cmH2O preserved cardiac output, and titrated FiO2 (${settings.fio2}%) avoided hyperoxic free-radical brain injury.`
+            };
+          }
+          return {
+            status: 'warning',
+            msg: "Refine Post-ROSC Neuro-Protective Parameters",
+            feedback: `Target Vt 450–560 mL (6–7.5 mL/kg), RR 16–22 bpm (to normalize PaCO2 58 -> 40 mmHg), PEEP 5–8 cmH2O, and titrated FiO2 40–70% (avoiding 100% hyperoxia).`
+          };
+        }
+      },
+      {
+        id: 13,
+        title: "Scenario 13: Massive Pulmonary Embolism with RV Failure (75kg Male)",
+        patientWeightKg: 75,
+        spontaneousDrive: false,
+        description:
+          "75kg male intubated for massive saddle pulmonary embolism with obstructive shock (BP 82/48 mmHg on norepinephrine & epinephrine, HR 138 bpm, CVP 22 mmHg, SpO2 84%). Bedside echo shows severe RV dilation with septal bowing into the LV. ABG: pH 7.25, PaCO2 52 mmHg, PaO2 51 mmHg, ETCO2 19 mmHg (high alveolar dead space).",
+        pathophysiology:
+          "Acute pulmonary arterial obstruction causes a sudden spike in Right Ventricular (RV) afterload, RV dilation, and leftward septal shift that impairs LV filling. Positive airway pressure compresses alveolar capillaries and further increases pulmonary vascular resistance (PVR). Meanwhile, hypoxia and hypercapnia trigger potent hypoxic pulmonary vasoconstriction.",
+        treatmentGoal:
+          "RV-Protective Strategy (VCV/PCV): Minimize intrathoracic pressure with low PEEP (3–6 cmH2O) and low-moderate Vt (420–520 mL, 6–7 mL/kg PBW), use higher RR (18–24 bpm) to clear CO2 across high dead space, and give high FiO2 (80–100%) because oxygen is a pulmonary vasodilator.",
+        baselineVitals: { spo2: 84, hr: 138, pip: 21, pplat: 17, bp: "82/48" },
+        evaluate: (settings) => {
+          if (settings.mode === 'CPAP' || settings.mode === 'BiPAP') {
+            return {
+              status: 'fatal',
+              msg: "Obstructive Shock & Refractory Hypoxemia on Non-Invasive Mode",
+              feedback: `This patient is in severe obstructive shock and intubated. Non-invasive ${settings.mode} cannot overcome high alveolar dead space or maintain oxygenation, leading to RV arrest.`
+            };
+          }
+          if (settings.peep > 10 || settings.vt > 620) {
+            return {
+              status: 'fatal',
+              msg: "Acute RV Afterload Spiral & Obstructive Cardiac Arrest",
+              feedback: `Fatal PE trap! High PEEP (${settings.peep} cmH2O) or large Vt (${settings.vt} mL) compressed intra-alveolar pulmonary vessels, acutely spiking pulmonary vascular resistance and RV afterload, causing immediate RV arrest. Keep PEEP low (3–6 cmH2O) in massive PE!`
+            };
+          }
+          if (settings.fio2 < 70 || settings.rr < 14 || settings.vt < 350) {
+            return {
+              status: 'fatal',
+              msg: "Hypoxic & Hypercapnic Pulmonary Vasoconstriction -> RV Arrest",
+              feedback: `With massive PE, alveolar dead space is huge (PaCO2 52 vs ETCO2 19). Low FiO2 (${settings.fio2}%) or low minute ventilation (RR ${settings.rr}, Vt ${settings.vt}) worsened hypoxia and hypercapnia, triggering lethal pulmonary vasoconstriction.`
+            };
+          }
+          if (
+            settings.peep >= 3 &&
+            settings.peep <= 6 &&
+            settings.vt >= 420 &&
+            settings.vt <= 520 &&
+            settings.rr >= 18 &&
+            settings.rr <= 24 &&
+            settings.fio2 >= 80
+          ) {
+            return {
+              status: 'success',
+              msg: "RV Afterload Unloaded & Dead-Space Ventilation Compensated",
+              feedback: `Text-book ICU physiology! Low PEEP (${settings.peep} cmH2O) and moderate Vt (${settings.vt} mL) avoided compressing pulmonary capillaries, RR ${settings.rr} bpm overcame alveolar dead space, and high FiO2 (${settings.fio2}%) promoted pulmonary vasodilation.`
+            };
+          }
+          return {
+            status: 'warning',
+            msg: "Suboptimal Right Ventricular Protection",
+            feedback: `Refine settings to protect the failing right ventricle: keep PEEP low (3–6 cmH2O), Vt 420–520 mL (6–7 mL/kg), RR 18–24 bpm to overcome dead space, and FiO2 80–100%.`
+          };
+        }
+      },
+      {
+        id: 14,
+        title: "Scenario 14: Severe Flail Chest & Pulmonary Contusion (80kg Male)",
+        patientWeightKg: 80,
+        spontaneousDrive: false,
+        description:
+          "80kg male after a high-speed motor vehicle collision with fractures of right ribs 3–8 (paradoxical flail chest segment), severe underlying right pulmonary contusion, and small right hemopneumothorax (thoracostomy tube in place). Intubated for respiratory exhaustion and hypoxemia (SpO2 82%, BP 104/66 mmHg, HR 126 bpm, PIP 38 cmH2O, Pplat 31 cmH2O).",
+        pathophysiology:
+          "Blunt chest trauma causes alveolar hemorrhage, interstitial edema, and loss of surfactant in the contused lung (focal ARDS), while flail rib segments collapse inward during negative-pressure breathing. Overdistending stiff contused alveoli or applying excessive pressure risks barotrauma, chest-tube air leak, and systemic air embolism.",
+        treatmentGoal:
+          "Pneumatic Internal Stabilization & Lung-Protective Strategy (VCV/PCV): Use low Vt 440–540 mL (5.5–6.8 mL/kg PBW) to protect bruised alveoli, moderate-high PEEP (8–13 cmH2O) for pneumatic splinting and recruitment, RR 14–22 bpm, and FiO2 70–100%.",
+        baselineVitals: { spo2: 82, hr: 126, pip: 38, pplat: 31, bp: "104/66" },
+        evaluate: (settings) => {
+          if (settings.mode === 'CPAP' || settings.mode === 'BiPAP') {
+            return {
+              status: 'fatal',
+              msg: "Unprotected Airway & Refractory Contusion Hypoxemia",
+              feedback: `This trauma patient is intubated with severe pulmonary contusion and chest tube. Non-invasive ${settings.mode} cannot adequately recruit hemorrhagic alveoli, resulting in hypoxic arrest.`
+            };
+          }
+          if (settings.vt > 640 || settings.peep > 16) {
+            return {
+              status: 'fatal',
+              msg: "Traumatic Pneumatocele Rupture, Tension Pneumothorax & Air Embolism",
+              feedback: `Excessive Vt (${settings.vt} mL) or PEEP (${settings.peep} cmH2O) ruptured lacerated, contused alveoli, causing a massive bronchopleural air leak and fatal tension pneumothorax.`
+            };
+          }
+          if (settings.peep < 7 || settings.fio2 < 60 || settings.vt < 340 || settings.rr < 10) {
+            return {
+              status: 'fatal',
+              msg: "Progressive Atelectasis, Shunting & Hypoxic Arrest",
+              feedback: `Insufficient PEEP (${settings.peep} cmH2O) or FiO2 (${settings.fio2}%) failed to splint the flail chest or recruit hemorrhagic alveoli, leading to refractory shunting and cardiac arrest.`
+            };
+          }
+          if (
+            settings.vt >= 440 &&
+            settings.vt <= 540 &&
+            settings.peep >= 8 &&
+            settings.peep <= 13 &&
+            settings.rr >= 14 &&
+            settings.rr <= 22 &&
+            settings.fio2 >= 70
+          ) {
+            return {
+              status: 'success',
+              msg: "Flail Chest Splinted & Contused Lung Protected",
+              feedback: `Excellent trauma critical care! Low Vt (${settings.vt} mL = ${(
+                settings.vt / 80
+              ).toFixed(1)} mL/kg PBW) prevented barotrauma in the bruised right lung, while PEEP ${
+                settings.peep
+              } cmH2O provided internal pneumatic stabilization and restored oxygenation.`
+            };
+          }
+          return {
+            status: 'warning',
+            msg: "Refine Trauma Lung-Protective Settings",
+            feedback: `Target Vt 440–540 mL (5.5–6.8 mL/kg PBW), PEEP 8–13 cmH2O for pneumatic stabilization, RR 14–22 bpm, and FiO2 70–100%.`
+          };
+        }
+      },
+      {
+        id: 15,
+        title: "Scenario 15: Paraquat Herbicide Toxic Pneumonitis (64kg Male)",
+        patientWeightKg: 64,
+        spontaneousDrive: false,
+        description:
+          "64kg male intubated 36 hours after accidental Paraquat herbicide ingestion, presenting with progressive chemical pneumonitis and acute hypoxic respiratory failure (SpO2 85%, BP 112/70 mmHg, HR 118 bpm, Pplat 28 cmH2O). ABG: pH 7.36, PaCO2 38 mmHg, PaO2 54 mmHg.",
+        pathophysiology:
+          "Paraquat actively concentrates in alveolar type I and II pneumocytes and undergoes NADPH-dependent redox cycling, reacting with molecular oxygen to generate massive superoxide free radicals. High inspired oxygen (FiO2 > 45%) acts as fuel for this reaction, rapidly destroying lung parenchyma and causing fulminant, fatal pulmonary fibrosis.",
+        treatmentGoal:
+          "Toxicology Hypoxic-Tolerance Strategy (VCV/PCV): Strictly limit FiO2 to 21–40% (accepting permissive hypoxemia SpO2 88–92%!), while using higher PEEP (10–15 cmH2O) to recruit alveoli, lung-protective Vt (360–440 mL, ~6 mL/kg PBW), and RR 14–22 bpm.",
+        baselineVitals: { spo2: 85, hr: 118, pip: 33, pplat: 28, bp: "112/70" },
+        evaluate: (settings) => {
+          if (settings.mode === 'CPAP' || settings.mode === 'BiPAP') {
+            return {
+              status: 'fatal',
+              msg: "Unprotected Airway & Progressive Respiratory Failure",
+              feedback: `The patient is already intubated with severe chemical pneumonitis. Non-invasive ${settings.mode} cannot sustain alveolar recruitment, leading to respiratory arrest.`
+            };
+          }
+          if (settings.fio2 > 50) {
+            return {
+              status: 'fatal',
+              msg: "Oxygen-Catalyzed Superoxide Free-Radical Pulmonary Fibrosis!",
+              feedback: `Classic toxicology trap! Setting FiO2 to ${settings.fio2}% fueled Paraquat redox cycling inside pneumocytes, generating massive superoxide radicals that rapidly obliterated alveolar-capillary membranes. In Paraquat poisoning, keep FiO2 ≤ 40% and rely on PEEP (10–15 cmH2O) for oxygenation!`
+            };
+          }
+          if (settings.vt > 550 || settings.peep > 18) {
+            return {
+              status: 'fatal',
+              msg: "Barotrauma / Pneumothorax in Chemical Pneumonitis",
+              feedback: `Excessive Vt (${settings.vt} mL) or PEEP (${settings.peep} cmH2O) ruptured chemically injured alveoli, causing a fatal tension pneumothorax.`
+            };
+          }
+          if (settings.fio2 < 21 || settings.peep < 8 || settings.vt < 280 || settings.rr < 10) {
+            return {
+              status: 'fatal',
+              msg: "Profound Hypoxemia & Hypoxic Arrest",
+              feedback: `Without sufficient PEEP (10–15 cmH2O) to recruit alveoli while keeping FiO2 low, severe shunting caused fatal hypoxemia.`
+            };
+          }
+          if (
+            settings.fio2 >= 21 &&
+            settings.fio2 <= 40 &&
+            settings.peep >= 10 &&
+            settings.peep <= 15 &&
+            settings.vt >= 360 &&
+            settings.vt <= 440 &&
+            settings.rr >= 14 &&
+            settings.rr <= 22
+          ) {
+            return {
+              status: 'success',
+              msg: "Toxicology Strategy Applied: Permissive Hypoxemia with PEEP Recruitment",
+              feedback: `Brilliant clinical toxicology! Keeping FiO2 low (${settings.fio2}%) prevented oxygen-catalyzed free-radical lung destruction, while PEEP ${settings.peep} cmH2O and Vt ${settings.vt} mL recruited alveoli to safely maintain SpO2 ~89–92%.`
+            };
+          }
+          return {
+            status: 'warning',
+            msg: "Fine-Tune Paraquat Lung-Protective & Low-FiO2 Strategy",
+            feedback: `Keep FiO2 strictly between 21–40% to avoid free-radical toxicity, use PEEP 10–15 cmH2O to maintain SpO2 88–92%, Vt 360–440 mL, and RR 14–22 bpm.`
+          };
+        }
+      },
+      {
+        id: 16,
+        title: "Scenario 16: Large Bronchopleural Fistula (BPF) in Necrotizing Pneumonia (70kg Male)",
+        patientWeightKg: 70,
+        spontaneousDrive: false,
+        description:
+          "70kg male intubated for severe necrotizing right pneumonia complicated by a large persistent bronchopleural fistula (continuous vigorous bubbling in the chest tube water seal, losing ~35% of delivered tidal volume through the pleural leak). SpO2 86%, BP 96/60 mmHg, HR 124 bpm, PIP 34 cmH2O.",
+        pathophysiology:
+          "A bronchopleural fistula (BPF) is a direct communication between the bronchial tree and pleural space. High mean airway pressures, high PEEP, large tidal volumes, and prolonged inspiratory times increase flow across the fistula—preventing healing, stealing alveolar minute ventilation, and risking tension pneumothorax.",
+        treatmentGoal:
+          "Low Airway-Pressure Fistula-Healing Strategy (PCV preferred, or gentle VCV): Minimize peak and mean airway pressures using low PEEP (3–6 cmH2O), low-moderate Vt (350–450 mL, 5–6.5 mL/kg PBW), higher RR (18–26 bpm) to compensate for leak volume, short inspiratory time (I:E 1:2 or 1:3), and FiO2 70–100%.",
+        baselineVitals: { spo2: 86, hr: 124, pip: 34, pplat: 27, bp: "96/60" },
+        evaluate: (settings) => {
+          if (settings.mode === 'CPAP' || settings.mode === 'BiPAP') {
+            return {
+              status: 'fatal',
+              msg: "Unprotected Airway & Severe Hypoventilation with BPF",
+              feedback: `This septic patient is intubated with a large bronchopleural fistula. Non-invasive ${settings.mode} cannot compensate for massive tidal volume loss through the chest tube.`
+            };
+          }
+          if (settings.peep > 10 || settings.vt > 550 || settings.ie === '1:1') {
+            return {
+              status: 'fatal',
+              msg: "Massive Fistula Blowout, Tension Pneumothorax & Hypoventilation",
+              feedback: `High PEEP (${settings.peep} cmH2O), large Vt (${settings.vt} mL), or prolonged inspiration (I:E ${settings.ie}) increased mean airway pressure, driving massive air through the bronchopleural fistula instead of perfused alveoli and causing cardiovascular collapse.`
+            };
+          }
+          if (settings.rr < 15 || settings.vt < 300 || settings.fio2 < 60) {
+            return {
+              status: 'fatal',
+              msg: "Severe Leak-Induced Hypoventilation & Hypoxic Arrest",
+              feedback: `Because ~35% of each breath escapes through the chest tube, a low RR (${settings.rr} bpm) or low FiO2 (${settings.fio2}%) resulted in profound hypercapnia and hypoxic arrest.`
+            };
+          }
+          if (
+            settings.peep >= 3 &&
+            settings.peep <= 6 &&
+            settings.vt >= 350 &&
+            settings.vt <= 450 &&
+            settings.rr >= 18 &&
+            settings.rr <= 26 &&
+            (settings.ie === '1:2' || settings.ie === '1:3') &&
+            settings.fio2 >= 70
+          ) {
+            return {
+              status: 'success',
+              msg: "Fistula Leak Minimized & Alveolar Ventilation Restored",
+              feedback: `Superb management! Low PEEP (${settings.peep} cmH2O), modest Vt (${settings.vt} mL), and short inspiratory phase (${settings.ie}) minimized pressure across the fistula, while higher RR (${settings.rr} bpm) compensated for leak volume.`
+            };
+          }
+          return {
+            status: 'warning',
+            msg: "Refine Airway Pressures to Minimize Bronchopleural Leak",
+            feedback: `Use PCV (or VCV) with low PEEP (3–6 cmH2O), Vt 350–450 mL, higher RR (18–26 bpm) to offset leak loss, I:E 1:2 or 1:3, and FiO2 70–100%.`
+          };
+        }
+      },
+      {
+        id: 17,
+        title: "Scenario 17: Pregnancy-Induced ARDS at 32 Weeks Gestation (PBW 52kg, Actual 78kg)",
+        patientWeightKg: 52,
+        spontaneousDrive: false,
+        description:
+          "29-year-old pregnant female (32 weeks gestation, height 160 cm, Predicted Body Weight 52kg, actual weight 78kg) intubated for severe pyelonephritis-induced ARDS. Positioned in left lateral tilt. SpO2 83%, BP 95/58 mmHg, HR 136 bpm, PIP 42 cmH2O, Pplat 35 cmH2O. ABG: pH 7.26, PaCO2 48 mmHg (note: normal pregnancy PaCO2 is 28–32 mmHg!).",
+        pathophysiology:
+          "Pregnancy causes progesterone-driven chronic respiratory alkalosis (normal PaCO2 28–32 mmHg) and diaphragmatic elevation by the gravid uterus, reducing FRC and chest-wall compliance. Crucially: (1) Vt MUST be dosed by PBW (52kg), not pregnant weight (78kg); (2) Fetal oxygenation requires maternal SpO2 ≥ 95%; (3) Severe permissive hypercapnia causes fetal acidosis and impairs placental CO2 clearance.",
+        treatmentGoal:
+          "Maternal-Fetal Lung-Protective Strategy (VCV/PCV): Dose Vt strictly by 52kg PBW (300–370 mL, ~6–7 mL/kg PBW), apply PEEP 10–14 cmH2O to overcome gravid diaphragmatic elevation, set higher RR 18–26 bpm to prevent fetal acidosis (target PaCO2 32–40 mmHg), and high FiO2 75–100% (maternal SpO2 ≥ 95%).",
+        baselineVitals: { spo2: 83, hr: 136, pip: 42, pplat: 35, bp: "95/58" },
+        evaluate: (settings) => {
+          if (settings.mode === 'CPAP' || settings.mode === 'BiPAP') {
+            return {
+              status: 'fatal',
+              msg: "Unprotected Airway & Maternal-Fetal Hypoxic Arrest",
+              feedback: `Pregnant patients have delayed gastric emptying and high aspiration risk, and she is already intubated with severe ARDS. Non-invasive ${settings.mode} resulted in maternal-fetal arrest.`
+            };
+          }
+          if (settings.vt > 460 || settings.peep > 17) {
+            return {
+              status: 'fatal',
+              msg: "Maternal Barotrauma / Pneumothorax (Dosed Actual vs. PBW!)",
+              feedback: `Critical obstetric critical-care pearl: Although she weighs 78kg at 32 weeks gestation, her lung size corresponds to her 52kg PBW! Setting Vt to ${settings.vt} mL (${(
+                settings.vt / 52
+              ).toFixed(1)} mL/kg PBW) ruptured stiff ARDS alveoli.`
+            };
+          }
+          if (settings.fio2 < 65 || settings.peep < 8 || settings.vt < 250 || settings.rr < 14) {
+            return {
+              status: 'fatal',
+              msg: "Maternal Hypoxemia & Severe Fetal Acidosis / Demise",
+              feedback: `Fetal hemoglobin requires maternal SpO2 ≥ 95% and avoidance of maternal hypercapnia. Low FiO2 (${settings.fio2}%), low PEEP (${settings.peep} cmH2O), or low RR (${settings.rr} bpm) caused profound fetal hypoxia and acidosis.`
+            };
+          }
+          if (
+            settings.vt >= 300 &&
+            settings.vt <= 370 &&
+            settings.peep >= 10 &&
+            settings.peep <= 14 &&
+            settings.rr >= 18 &&
+            settings.rr <= 26 &&
+            settings.fio2 >= 75
+          ) {
+            return {
+              status: 'success',
+              msg: "Maternal & Fetal Oxygenation and Acid-Base Stabilized",
+              feedback: `Exceptional obstetric ICU care! Dosing Vt (${settings.vt} mL = ${(
+                settings.vt / 52
+              ).toFixed(1)} mL/kg PBW) by her 52kg PBW prevented volutrauma, PEEP ${
+                settings.peep
+              } cmH2O counteracted gravid diaphragmatic elevation, RR ${
+                settings.rr
+              } bpm prevented fetal hypercapnic acidosis, and FiO2 ${settings.fio2}% restored maternal SpO2 ≥ 95%.`
+            };
+          }
+          return {
+            status: 'warning',
+            msg: "Refine Maternal-Fetal ARDS Parameters",
+            feedback: `Dose Vt by 52kg PBW (300–370 mL), set PEEP 10–14 cmH2O, RR 18–26 bpm (to avoid fetal hypercapnic acidosis), and FiO2 ≥ 75% to keep maternal SpO2 ≥ 95%.`
+          };
+        }
+      },
+      {
+        id: 18,
+        title: "Scenario 18: Grade IV Abdominal Compartment Syndrome Post-Laparotomy (72kg Male)",
+        patientWeightKg: 72,
+        spontaneousDrive: false,
+        description:
+          "72kg male intubated in the ICU after damage-control laparotomy for a ruptured abdominal aortic aneurysm. Intra-abdominal pressure (IAP) is 28 mmHg (Grade IV Abdominal Compartment Syndrome). Massive cephalad diaphragmatic shift causes severe extrinsic chest-wall restriction (PIP 46 cmH2O, Pplat 36 cmH2O, SpO2 84%, BP 88/52 mmHg, HR 132 bpm).",
+        pathophysiology:
+          "Elevated intra-abdominal pressure (IAP 28 mmHg) pushes the diaphragm upward, transmitting high pleural pressure to the thorax, collapsing basilar lung zones, and reducing chest-wall compliance. Low PEEP allows complete basilar collapse and shunting, whereas excessive Vt causes severe transpulmonary overdistension, and PEEP > 18 cmH2O collapses IVC venous return.",
+        treatmentGoal:
+          "Extrinsic Chest-Wall Restriction Strategy (VCV/PCV): Use lung-protective Vt 380–460 mL (5.3–6.4 mL/kg PBW) to limit airway pressures, moderate-high PEEP (10–15 cmH2O) to counterbalance elevated IAP and keep lung bases open, RR 16–24 bpm, and FiO2 70–100%.",
+        baselineVitals: { spo2: 84, hr: 132, pip: 46, pplat: 36, bp: "88/52" },
+        evaluate: (settings) => {
+          if (settings.mode === 'CPAP' || settings.mode === 'BiPAP') {
+            return {
+              status: 'fatal',
+              msg: "Unprotected Airway & Diaphragmatic Splinting Arrest",
+              feedback: `This post-laparotomy patient is intubated with Grade IV Abdominal Compartment Syndrome. Non-invasive ${settings.mode} cannot overcome severe cephalad diaphragmatic pressure, leading to arrest.`
+            };
+          }
+          if (settings.vt > 560 || settings.peep > 18) {
+            return {
+              status: 'fatal',
+              msg: "IVC Venous Collapse & Barotrauma in Abdominal Compartment Syndrome",
+              feedback: `In ACS, inferior vena cava return is already compressed by 28 mmHg abdominal pressure. Excessive PEEP (${settings.peep} cmH2O) or Vt (${settings.vt} mL) crushed remaining preload and caused barotrauma.`
+            };
+          }
+          if (settings.peep < 8 || settings.fio2 < 60 || settings.vt < 300 || settings.rr < 12) {
+            return {
+              status: 'fatal',
+              msg: "Severe Basilar Atelectasis, Shunting & Hypoxic Arrest",
+              feedback: `Low PEEP (${settings.peep} cmH2O) could not counterbalance 28 mmHg of intra-abdominal pressure pushing up on the diaphragm, causing total basilar lung collapse and hypoxic arrest.`
+            };
+          }
+          if (
+            settings.vt >= 380 &&
+            settings.vt <= 460 &&
+            settings.peep >= 10 &&
+            settings.peep <= 15 &&
+            settings.rr >= 16 &&
+            settings.rr <= 24 &&
+            settings.fio2 >= 70
+          ) {
+            return {
+              status: 'success',
+              msg: "Diaphragmatic Splinting Counterbalanced & Hemodynamics Preserved",
+              feedback: `Great job! PEEP ${settings.peep} cmH2O counterbalanced the elevated intra-abdominal pressure without crushing IVC venous return, while Vt ${settings.vt} mL (~${(
+                settings.vt / 72
+              ).toFixed(1)} mL/kg PBW) kept transpulmonary pressures safe.`
+            };
+          }
+          return {
+            status: 'warning',
+            msg: "Refine Settings for Abdominal Compartment Syndrome",
+            feedback: `Target Vt 380–460 mL (5.3–6.4 mL/kg PBW), PEEP 10–15 cmH2O to counterbalance elevated IAP, RR 16–24 bpm, and FiO2 70–100%.`
+          };
+        }
+      },
+      {
+        id: 19,
+        title: "Scenario 19: Severe Smoke Inhalation & Carbon Monoxide Poisoning (75kg Male)",
+        patientWeightKg: 75,
+        spontaneousDrive: false,
+        description:
+          "75kg male rescued from an enclosed house fire, intubated early for carbonaceous sputum and supraglottic edema. Carboxyhemoglobin (COHb) is 28%, standard pulse oximeter falsely displays 98% (true arterial SaO2 is 71%), and carbonaceous bronchial casts cause severe airway resistance and air trapping (PIP 44 cmH2O, Pplat 24 cmH2O, BP 108/68 mmHg, HR 132 bpm).",
+        pathophysiology:
+          "Carbon monoxide binds hemoglobin with 240x the affinity of oxygen and shifts the oxyhemoglobin dissociation curve left, causing severe tissue hypoxia despite a falsely normal SpO2 reading. Simultaneously, chemical tracheobronchitis and fibrin/soot casts cause obstructive bronchospasm and dynamic hyperinflation.",
+        treatmentGoal:
+          "100% Oxygen Washout + Obstructive Lung Protection (VCV/PCV): Must deliver FiO2 95–100% to accelerate COHb elimination (reducing half-life from 320 min to ~74 min), combined with low-moderate RR 12–16 bpm, prolonged expiration (I:E 1:3 or 1:4), Vt 420–520 mL (6–7 mL/kg PBW), and PEEP 6–10 cmH2O.",
+        baselineVitals: { spo2: 72, hr: 132, pip: 44, pplat: 24, bp: "108/68" },
+        evaluate: (settings) => {
+          if (settings.mode === 'CPAP' || settings.mode === 'BiPAP') {
+            return {
+              status: 'fatal',
+              msg: "Thermal Airway Edema Obstruction & CO Asphyxiation",
+              feedback: `This burn patient is intubated for thermal airway edema and severe CO poisoning. Non-invasive ${settings.mode} cannot maintain airway patency or deliver high-flow 100% O2 washout.`
+            };
+          }
+          if (settings.fio2 < 90) {
+            return {
+              status: 'fatal',
+              msg: "Persistent Carbon Monoxide Toxicity & Hypoxic Myocardial/Brain Necrosis",
+              feedback: `Critical burn/toxicology trap! Although standard pulse oximeters falsely read 98% in CO poisoning, true SaO2 is 71% (COHb 28%). Setting FiO2 to ${settings.fio2}% left CO bound to hemoglobin and cytochrome oxidase, causing fatal anoxic injury. Always use FiO2 100% until COHb < 5%!`
+            };
+          }
+          if (settings.rr > 18 || settings.ie === '1:1' || settings.ie === '1:2') {
+            return {
+              status: 'fatal',
+              msg: "Bronchial Cast Air-Trapping (Auto-PEEP) & Barotrauma",
+              feedback: `Carbonaceous airway casts cause severe expiratory obstruction. Setting RR ${settings.rr} bpm with I:E ${
+                settings.ie || 'unset'
+              } prevented complete lung emptying, causing Auto-PEEP and pneumothorax.`
+            };
+          }
+          if (settings.vt > 620 || settings.peep > 14) {
+            return {
+              status: 'fatal',
+              msg: "Barotrauma in Chemically Injured Airways",
+              feedback: `Excessive Vt (${settings.vt} mL) or PEEP (${settings.peep} cmH2O) overdistended obstructed lung units, causing alveolar rupture.`
+            };
+          }
+          if (
+            settings.fio2 >= 95 &&
+            settings.rr >= 12 &&
+            settings.rr <= 16 &&
+            (settings.ie === '1:3' || settings.ie === '1:4') &&
+            settings.vt >= 420 &&
+            settings.vt <= 520 &&
+            settings.peep >= 6 &&
+            settings.peep <= 10
+          ) {
+            return {
+              status: 'success',
+              msg: "CO Washout Initiated & Obstructive Air Trapping Prevented",
+              feedback: `Outstanding management! Delivering ${settings.fio2}% FiO2 rapidly displaces carbon monoxide from hemoglobin, while low RR (${settings.rr} bpm), prolonged expiration (${settings.ie}), and Vt ${settings.vt} mL prevent air trapping behind carbonaceous casts.`
+            };
+          }
+          return {
+            status: 'warning',
+            msg: "Refine CO Washout & Airway Cast Ventilation Settings",
+            feedback: `Ensure FiO2 is 95–100% for CO washout, RR 12–16 bpm, I:E 1:3 or 1:4 to prevent air trapping from soot casts, Vt 420–520 mL, and PEEP 6–10 cmH2O.`
+          };
+        }
+      },
+      {
+        id: 20,
+        title: "Scenario 20: Severe COPD + Cardiogenic Pulmonary Edema Overlap (70kg Male)",
+        patientWeightKg: 70,
+        spontaneousDrive: true,
+        description:
+          "70kg male with severe bullous COPD and ischemic cardiomyopathy (LVEF 25%) presenting in acute mixed hypoxic-hypercapnic respiratory failure (ABG: pH 7.21, PaCO2 74 mmHg, PaO2 50 mmHg, SpO2 80%, BP 168/98 mmHg, HR 126 bpm). He is awake, diaphoretic, sitting upright with diffuse expiratory wheezes and bibasilar crackles.",
+        pathophysiology:
+          "This dual-pathology crisis combines alveolar flooding from elevated LV filling pressures with severe expiratory airflow obstruction and intrinsic PEEP (auto-PEEP). Pure CPAP fails to augment tidal volume to clear PaCO2 74 mmHg; low EPAP fails to recruit flooded alveoli or offset auto-PEEP; excessive IPAP ruptures apical bullae; and 100% FiO2 worsens hypercapnia.",
+        treatmentGoal:
+          "Balanced Non-Invasive BiPAP Strategy: Use BiPAP with IPAP 14–20 cmH2O (to augment tidal volume and clear CO2), higher EPAP 6–9 cmH2O (to recruit pulmonary edema alveoli, unload LV preload/afterload, and counterbalance auto-PEEP), Backup RR 12–16 bpm, and controlled FiO2 35–55% (targeting SpO2 88–92%).",
+        baselineVitals: { spo2: 80, hr: 126, pip: 18, pplat: 15, bp: "168/98" },
+        evaluate: (settings) => {
+          if (settings.mode === 'VCV' || settings.mode === 'PCV') {
+            return {
+              status: 'warning',
+              msg: "Avoidable Intubation in Awake Cardiopulmonary Overlap",
+              feedback: `Because the patient is awake and cooperative, a trial of BiPAP (IPAP 14–20 cmH2O, EPAP 6–9 cmH2O, FiO2 35–55%) is strongly preferred over invasive intubation, which carries high barotrauma and weaning-failure risk in bullous COPD.`
+            };
+          }
+          if (settings.mode === 'CPAP') {
+            return {
+              status: 'fatal',
+              msg: "Persistent Hypercapnic Acidosis & CO2 Narcosis on CPAP",
+              feedback: `While CPAP helps cardiogenic pulmonary edema, it provides zero inspiratory pressure support (IPAP). With PaCO2 at 74 mmHg and severe COPD fatigue, lack of inspiratory assistance led to progressive respiratory acidosis and narcosis. Use BiPAP!`
+            };
+          }
+          if (settings.ipap > 23 || settings.peep > 13) {
+            return {
+              status: 'fatal',
+              msg: "Apical Emphysematous Bulla Rupture & Tension Pneumothorax",
+              feedback: `Excessive pressure (IPAP ${settings.ipap} cmH2O, EPAP ${settings.peep} cmH2O) ruptured fragile apical COPD bullae and caused gastric insufflation, triggering a fatal tension pneumothorax.`
+            };
+          }
+          if (settings.ipap < 12 || settings.peep < 5 || settings.fio2 < 30) {
+            return {
+              status: 'fatal',
+              msg: "Refractory Pulmonary Edema & Hypercapnic Arrest",
+              feedback: `Insufficient EPAP (${settings.peep} cmH2O) failed to recruit flooded alveoli or offset auto-PEEP, while low IPAP (${settings.ipap} cmH2O) failed to clear CO2, resulting in cardiopulmonary arrest.`
+            };
+          }
+          if (settings.fio2 > 70) {
+            return {
+              status: 'warning',
+              msg: "Oxygen-Induced Hypercapnia Risk: Titrate FiO2 to 35–55%",
+              feedback: `Your BiPAP pressures are helpful, but high FiO2 (${settings.fio2}%) worsens V/Q mismatch and Haldane-effect CO2 retention in severe COPD. Titrate FiO2 to 35–55% to target SpO2 88–92%.`
+            };
+          }
+          if (
+            settings.mode === 'BiPAP' &&
+            settings.ipap >= 14 &&
+            settings.ipap <= 20 &&
+            settings.peep >= 6 &&
+            settings.peep <= 9 &&
+            settings.fio2 >= 35 &&
+            settings.fio2 <= 55
+          ) {
+            return {
+              status: 'success',
+              msg: "Dual Cardiopulmonary Crisis Stabilized with Precision BiPAP",
+              feedback: `Master-level clinical mastery! EPAP ${settings.peep} cmH2O recruited flooded alveoli, unloaded the failing LV, and offset auto-PEEP, while IPAP ${settings.ipap} cmH2O (${
+                settings.ipap - settings.peep
+              } cmH2O pressure support) cleared CO2 and controlled FiO2 (${settings.fio2}%) prevented hypercapnic narcosis.`
+            };
+          }
+          return {
+            status: 'warning',
+            msg: "Fine-Tune BiPAP for COPD + Pulmonary Edema Overlap",
+            feedback: `Optimize BiPAP to IPAP 14–20 cmH2O, EPAP 6–9 cmH2O, Backup RR 12–16 bpm, and controlled FiO2 35–55% (target SpO2 88–92%).`
+          };
+        }
       }
     ];
 
@@ -1322,15 +2141,31 @@
       let resistivePress = 6;
       let tauE = 0.45;
 
-      if (scenario.id === 1 || scenario.id === 9) {
+      if (scenario.id === 1 || scenario.id === 9 || scenario.id === 17) {
         compliance = 22;
         resistivePress = 7;
+        tauE = 0.4;
+      } else if (scenario.id === 14 || scenario.id === 15 || scenario.id === 18) {
+        compliance = 25;
+        resistivePress = 8;
+        tauE = 0.42;
+      } else if (scenario.id === 16) {
+        compliance = 36;
+        resistivePress = 6;
         tauE = 0.4;
       } else if (scenario.id === 2 || scenario.id === 4) {
         compliance = 55;
         resistivePress = 24;
         tauE = 1.75;
-      } else if (scenario.id === 10) {
+      } else if (scenario.id === 19) {
+        compliance = 48;
+        resistivePress = 22;
+        tauE = 1.55;
+      } else if (scenario.id === 20) {
+        compliance = 40;
+        resistivePress = 18;
+        tauE = 1.35;
+      } else if (scenario.id === 10 || scenario.id === 12) {
         compliance = 42;
         resistivePress = 8;
         tauE = 0.5;
@@ -1641,7 +2476,7 @@
 
       // Root background & Fatal Overlay
       const appRoot = document.getElementById('app-root');
-      appRoot.className = `min-h-screen transition-colors duration-500 ${
+      appRoot.className = `flex-1 transition-colors duration-500 ${
         isFatal ? 'bg-red-950' : 'bg-slate-950'
       } p-2 sm:p-3 lg:p-4 flex flex-col`;
 
@@ -1955,17 +2790,18 @@
         state.vitals = { spo2: 0, hr: 0, pip: 0, pplat: 0, bp: "0/0" };
         playFlatlineTone();
       } else if (evaluation.status === 'success') {
+        const permissiveHypoxemiaIds = [4, 15, 20];
         state.vitals = {
-          spo2: scenario.id === 4 ? 91 : Math.floor(Math.random() * 4) + 95,
+          spo2: permissiveHypoxemiaIds.includes(scenario.id) ? 91 : Math.floor(Math.random() * 4) + 95,
           hr: Math.floor(Math.random() * 10) + 74,
           pip:
             state.settings.mode === 'CPAP'
               ? state.settings.peep
               : state.settings.mode === 'BiPAP'
               ? state.settings.ipap
-              : scenario.id === 2
+              : scenario.id === 2 || scenario.id === 19
               ? 32
-              : scenario.id === 1
+              : [1, 14, 15, 17, 18].includes(scenario.id)
               ? 28
               : 19,
           pplat:
@@ -1973,7 +2809,7 @@
               ? state.settings.peep
               : state.settings.mode === 'BiPAP'
               ? state.settings.ipap
-              : scenario.id === 1
+              : [1, 14, 15, 17, 18].includes(scenario.id)
               ? 24
               : 15,
           bp: "120/78"
