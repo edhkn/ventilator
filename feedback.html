@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulation Feedback — Mechanical Ventilator Cockpit | EDHKN</title>
+  <meta
+    name="description"
+    content="Post-simulation feedback form for the EDHKN Mechanical Ventilator Cockpit Simulator at Hospital Kuala Nerang."
+  />
+
+  <!-- Google Fonts: Plus Jakarta Sans & IBM Plex Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            mono: ['"IBM Plex Mono"', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    :root {
+      --chassis-bg: #f3f4f1;
+      --card-bg: #ffffff;
+      --ink-primary: #0f172a;
+      --border-hard: #0f172a;
+      --accent-teal: #0f766e;
+    }
+
+    body {
+      background-color: var(--chassis-bg);
+      color: var(--ink-primary);
+    }
+
+    .hw-card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--border-hard);
+      box-shadow: 4px 4px 0px #0f172a;
+    }
+
+    .hw-btn-primary {
+      background: #0f172a;
+      color: #ffffff;
+      border: 1.5px solid #0f172a;
+      box-shadow: 4px 4px 0px #0f766e;
+      transition: all 0.15s ease;
+    }
+
+    .hw-btn-primary:hover:not(:disabled) {
+      background: #0f766e;
+      border-color: #0f172a;
+      box-shadow: 4px 4px 0px #0f172a;
+      transform: translate(-1px, -1px);
+    }
+
+    .hw-btn-primary:active:not(:disabled) {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0px #0f172a;
+    }
+
+    /* Floating Navigation Header (Hospital Kuala Nerang) */
+    nav.portal-nav {
+      position: sticky;
+      top: 12px;
+      z-index: 40;
+      max-width: 1080px;
+      margin: 12px auto 0;
+      width: calc(100% - 24px);
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(10px);
+      border-radius: 50px;
+      padding: 10px 22px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      border: 1.5px solid #0f172a;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: #2c3e50;
+      min-width: 0;
+    }
+
+    .dept-logo {
+      height: 44px !important;
+      width: auto !important;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      font-size: 1.05rem;
+      font-weight: 700;
+      line-height: 1.2;
+      display: flex;
+      flex-direction: column;
+      color: #2c3e50;
+    }
+
+    .logo-text span {
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: #64748b;
+    }
+
+    /* Single-Line Portal Footer */
+    footer.portal-footer {
+      margin-top: auto;
+      background: #ffffff;
+      border-top: 1.5px solid #0f172a;
+      padding: 14px 20px;
+      width: 100%;
+    }
+
+    .footer-container {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: nowrap;
+    }
+
+    .footer-logos {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .footer-logos img {
+      height: 34px !important;
+      width: auto !important;
+      object-fit: contain;
+    }
+
+    .logo-divider {
+      width: 1px;
+      height: 22px;
+      background-color: #cbd5e1;
+    }
+
+    .footer-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #475569;
+      background: #e2e8f0;
+      padding: 4px 12px;
+      border-radius: 20px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background-color: #22c55e;
+      border-radius: 50%;
+      box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+      animation: portalPulse 1.8s infinite;
+    }
+
+    @keyframes portalPulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    }
+
+    .footer-copyright {
+      font-size: 0.82rem;
+      color: #64748b;
+      margin: 0;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .footer-copyright span {
+      color: #0f172a;
+      font-weight: 700;
+    }
+
+    @media (max-width: 768px) {
+      nav.portal-nav {
+        padding: 8px 14px;
+      }
+      .dept-logo {
+        height: 36px !important;
+      }
+      .logo-text {
+        font-size: 0.92rem;
+      }
+      .logo-text span {
+        font-size: 0.7rem;
+      }
+      .footer-container {
+        gap: 8px;
+      }
+      .footer-logos img {
+        height: 26px !important;
+      }
+      .footer-status, .footer-copyright {
+        font-size: 0.72rem;
+      }
+    }
+  </style>
+</head>
+<body class="font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- Floating Hospital Kuala Nerang Navigation Header -->
+  <nav class="portal-nav">
+    <a href="index.html" class="logo-group">
+      <img
+        src="https://lh3.googleusercontent.com/d/1O2Nj1Dr4U6wo7ISjdkDRukPYwZUkOOuJ"
+        onerror="this.onerror=null;this.src='https://placehold.co/96x96/0f172a/ffffff?text=HKN';"
+        alt="Logo Jabatan Kecemasan & Trauma Hospital Kuala Nerang"
+        class="dept-logo"
+      />
+      <div class="logo-text">
+        Hospital Kuala Nerang
+        <span>Jabatan Kecemasan &amp; Trauma</span>
+      </div>
+    </a>
+
+    <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+      <a
+        href="index.html"
+        class="text-xs font-bold text-slate-600 hover:text-slate-950 px-3 py-1.5 rounded-full transition-colors"
+      >
+        Portal Home
+      </a>
+      <a
+        href="https://edhkn.github.io/ventilator/cockpit.html"
+        class="inline-flex items-center gap-1.5 bg-slate-900 hover:bg-teal-700 text-white text-xs sm:text-sm font-bold px-4 py-2 rounded-full transition-colors"
+      >
+        <span>Launch Cockpit</span>
+        <span aria-hidden="true">→</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- MAIN FEEDBACK CONTAINER -->
+  <main class="flex-1 max-w-3xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12">
+
+    <!-- FEEDBACK FORM CARD -->
+    <div id="feedbackFormCard" class="hw-card rounded-2xl p-5 sm:p-8">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-teal-50 border border-teal-600 text-[11px] font-mono font-bold uppercase tracking-wider text-teal-900">
+          <span class="w-2 h-2 rounded-full bg-teal-600"></span>
+          <span>Post-Simulation Clinical Audit • 11 Questions</span>
+        </div>
+        <span class="text-[11px] font-mono text-slate-500">EDHKN Training Evaluation</span>
+      </div>
+
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight mb-2">
+        Ventilator Cockpit Detailed Feedback
+      </h1>
+      <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-6">
+        Thank you for completing the Mechanical Ventilator Cockpit simulation. Please complete all <strong class="text-slate-900">11 evaluation questions</strong> below to help us refine clinical realism, waveform fidelity, and critical care teaching at Hospital Kuala Nerang.
+      </p>
+
+      <form id="feedbackForm" class="space-y-6" novalidate>
+        <!-- SECTION A: CLINICIAN PROFILE -->
+        <div class="rounded-xl bg-slate-50 border border-slate-300 p-4 sm:p-5 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+            <span class="text-xs font-mono font-bold uppercase tracking-wider text-slate-900">
+              Section A — Clinician Identification
+            </span>
+            <span class="text-[10px] font-mono text-teal-700 font-semibold">Auto-filled from email link</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="fbName" class="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                Full Name &amp; Title <span class="text-rose-600">*</span>
+              </label>
+              <input
+                type="text"
+                id="fbName"
+                required
+                placeholder="e.g. Dr. Ahmad Faiz / SN Siti Aisyah"
+                class="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-300 focus:border-slate-900 bg-white text-sm font-medium text-slate-950 outline-none transition-colors"
+              />
+            </div>
+
+            <div>
+              <label for="fbEmail" class="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                Email Address <span class="text-rose-600">*</span>
+              </label>
+              <input
+                type="email"
+                id="fbEmail"
+                required
+                placeholder="e.g. clinician@moh.gov.my"
+                class="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-300 focus:border-slate-900 bg-white text-sm font-medium text-slate-950 outline-none transition-colors"
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="fbRole" class="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                Clinical Role <span class="text-rose-600">*</span>
+              </label>
+              <select
+                id="fbRole"
+                class="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-300 focus:border-slate-900 bg-white text-sm font-semibold text-slate-900 outline-none cursor-pointer"
+              >
+                <option value="Medical Officer (MO)">Medical Officer (MO)</option>
+                <option value="House Officer (HO)">House Officer (HO)</option>
+                <option value="Emergency / ICU Specialist">Emergency / ICU Specialist</option>
+                <option value="Assistant Medical Officer (PPP)">Assistant Medical Officer (PPP)</option>
+                <option value="Staff Nurse (SN)">Staff Nurse (SN)</option>
+                <option value="Medical / Paramedic Student">Medical / Paramedic Student</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="fbDepartment" class="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                Department / Hospital
+              </label>
+              <input
+                type="text"
+                id="fbDepartment"
+                value="Jabatan Kecemasan & Trauma, HKN"
+                placeholder="e.g. ED / ICU / Medical Ward"
+                class="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-300 focus:border-slate-900 bg-white text-sm font-medium text-slate-950 outline-none transition-colors"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION B: 1–5 LIKERT SCALE QUESTIONS (Q1 – Q7) -->
+        <div class="space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-300 pb-2">
+            <span class="text-xs font-mono font-bold uppercase tracking-wider text-slate-900">
+              Section B — Simulation &amp; Educational Quality (Q1 – Q7)
+            </span>
+            <span class="text-[11px] font-mono text-slate-500">1 = Strongly Disagree • 5 = Strongly Agree</span>
+          </div>
+
+          <!-- Dynamic container for Q1–Q7 Likert cards -->
+          <div id="likertQuestionsContainer" class="space-y-3.5"></div>
+        </div>
+
+        <!-- SECTION C: SCENARIO & CURRICULUM FEEDBACK (Q8 – Q11) -->
+        <div class="space-y-4">
+          <div class="border-b border-slate-300 pb-2">
+            <span class="text-xs font-mono font-bold uppercase tracking-wider text-slate-900">
+              Section C — Clinical Reflections &amp; Recommendations (Q8 – Q11)
+            </span>
+          </div>
+
+          <!-- Q8: Most Challenging / Valuable Scenario -->
+          <div class="rounded-xl border border-slate-300 bg-white p-4">
+            <label for="fbScenario" class="block text-xs sm:text-sm font-bold text-slate-950 mb-2">
+              <span class="inline-block font-mono text-[11px] px-2 py-0.5 rounded bg-slate-900 text-white mr-1.5">Q08</span>
+              Which clinical scenario challenged your decision-making the most or provided the highest learning value?
+            </label>
+            <select
+              id="fbScenario"
+              class="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-300 focus:border-slate-900 bg-slate-50 focus:bg-white text-sm font-semibold text-slate-900 outline-none cursor-pointer"
+            >
+              <option value="All 20 Scenarios Overall">All 20 Scenarios Overall</option>
+              <option value="Scenario 1: Severe ARDS (70kg Male)">Scenario 1: Severe ARDS (70kg Male)</option>
+              <option value="Scenario 2: Status Asthmaticus (60kg Female)">Scenario 2: Status Asthmaticus (60kg Female)</option>
+              <option value="Scenario 3: Acute Cardiogenic Pulmonary Edema (CPAP)">Scenario 3: Acute Cardiogenic Pulmonary Edema (CPAP)</option>
+              <option value="Scenario 4: Acute COPD Exacerbation with Hypercapnia (BiPAP)">Scenario 4: Acute COPD Exacerbation with Hypercapnia (BiPAP)</option>
+              <option value="Scenario 5: Opiate Overdose & Apnea">Scenario 5: Opiate Overdose &amp; Apnea</option>
+              <option value="Scenario 6: Traumatic Brain Injury with Elevated ICP">Scenario 6: Traumatic Brain Injury with Elevated ICP</option>
+              <option value="Scenario 7: Guillain-Barré Neuromuscular Failure">Scenario 7: Guillain-Barré Neuromuscular Failure</option>
+              <option value="Scenario 8: Post-Op OSA & Basilar Atelectasis">Scenario 8: Post-Op OSA &amp; Basilar Atelectasis</option>
+              <option value="Scenario 9: Severe Pneumonia with Unilateral Consolidation">Scenario 9: Severe Pneumonia with Unilateral Consolidation</option>
+              <option value="Scenario 10: Obesity Hypoventilation Decompensation (OHS)">Scenario 10: Obesity Hypoventilation Decompensation (OHS)</option>
+              <option value="Scenario 11: Severe DKA with Kussmaul Compensation">Scenario 11: Severe DKA with Kussmaul Compensation</option>
+              <option value="Scenario 12: Post-ROSC Cardiac Arrest with Mixed Acidosis">Scenario 12: Post-ROSC Cardiac Arrest with Mixed Acidosis</option>
+              <option value="Scenario 13: Massive Pulmonary Embolism with RV Failure">Scenario 13: Massive Pulmonary Embolism with RV Failure</option>
+              <option value="Scenario 14: Severe Flail Chest & Pulmonary Contusion">Scenario 14: Severe Flail Chest &amp; Pulmonary Contusion</option>
+              <option value="Scenario 15: Paraquat Herbicide Toxic Pneumonitis">Scenario 15: Paraquat Herbicide Toxic Pneumonitis</option>
+              <option value="Scenario 16: Large Bronchopleural Fistula (BPF)">Scenario 16: Large Bronchopleural Fistula (BPF)</option>
+              <option value="Scenario 17: Pregnancy-Induced ARDS at 32 Weeks">Scenario 17: Pregnancy-Induced ARDS at 32 Weeks</option>
+              <option value="Scenario 18: Grade IV Abdominal Compartment Syndrome">Scenario 18: Grade IV Abdominal Compartment Syndrome</option>
+              <option value="Scenario 19: Smoke Inhalation & Carbon Monoxide Poisoning">Scenario 19: Smoke Inhalation &amp; Carbon Monoxide Poisoning</option>
+              <option value="Scenario 20: Severe COPD + Pulmonary Edema Overlap">Scenario 20: Severe COPD + Pulmonary Edema Overlap</option>
+            </select>
+          </div>
+
+          <!-- Q9: Recommended Training Level -->
+          <div class="rounded-xl border border-slate-300 bg-white p-4">
+            <label for="fbTrainingLevel" class="block text-xs sm:text-sm font-bold text-slate-950 mb-2">
+              <span class="inline-block font-mono text-[11px] px-2 py-0.5 rounded bg-slate-900 text-white mr-1.5">Q09</span>
+              Where should this Ventilator Cockpit simulator be integrated into clinical training?
+            </label>
+            <select
+              id="fbTrainingLevel"
+              class="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-300 focus:border-slate-900 bg-slate-50 focus:bg-white text-sm font-semibold text-slate-900 outline-none cursor-pointer"
+            >
+              <option value="All Emergency & Critical Care Staff (HO, MO, PPP, SN)">All Emergency &amp; Critical Care Staff (HO, MO, PPP, SN)</option>
+              <option value="House Officer (HO) ED / Anesthesiology Posting Orientation">House Officer (HO) ED / Anesthesiology Posting Orientation</option>
+              <option value="Medical Officer (MO) Resuscitation Zone Credentialing">Medical Officer (MO) Resuscitation Zone Credentialing</option>
+              <option value="ALS / Critical Care Workshop Pre-Course Module">ALS / Critical Care Workshop Pre-Course Module</option>
+              <option value="PPP & Staff Nurse (SN) Ventilator Monitoring Training">PPP &amp; Staff Nurse (SN) Ventilator Monitoring Training</option>
+            </select>
+          </div>
+
+          <!-- Q10: Key Clinical Takeaway / Pearl Learned -->
+          <div class="rounded-xl border border-slate-300 bg-white p-4">
+            <label for="fbKeyTakeaway" class="block text-xs sm:text-sm font-bold text-slate-950 mb-2">
+              <span class="inline-block font-mono text-[11px] px-2 py-0.5 rounded bg-slate-900 text-white mr-1.5">Q10</span>
+              What is the single most important physiological concept or ventilator adjustment pearl you learned today? <span class="text-rose-600">*</span>
+            </label>
+            <textarea
+              id="fbKeyTakeaway"
+              rows="3"
+              required
+              placeholder="e.g. Dosing Vt by Predicted Body Weight (PBW) rather than actual weight in pregnancy/obesity, or lowering PEEP in massive PE to protect RV afterload..."
+              class="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-300 focus:border-slate-900 bg-slate-50 focus:bg-white text-sm text-slate-950 outline-none transition-colors"
+            ></textarea>
+          </div>
+
+          <!-- Q11: Suggestions & New Scenario Requests -->
+          <div class="rounded-xl border border-slate-300 bg-white p-4">
+            <label for="fbComments" class="block text-xs sm:text-sm font-bold text-slate-950 mb-2">
+              <span class="inline-block font-mono text-[11px] px-2 py-0.5 rounded bg-slate-900 text-white mr-1.5">Q11</span>
+              What improvements, new features (e.g., ABG panel, Flow waveform), or additional scenarios should we add next? <span class="text-rose-600">*</span>
+            </label>
+            <textarea
+              id="fbComments"
+              rows="3"
+              required
+              placeholder="Share suggestions on UI ergonomics, alarm thresholds, or new pediatric/trauma/ICU cases..."
+              class="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-300 focus:border-slate-900 bg-slate-50 focus:bg-white text-sm text-slate-950 outline-none transition-colors"
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Inline Error Box -->
+        <div
+          id="fbErrorBox"
+          class="hidden rounded-xl border border-rose-500 bg-rose-50 px-3.5 py-2.5 text-xs font-semibold text-rose-900"
+        ></div>
+
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          id="fbSubmitBtn"
+          class="hw-btn-primary w-full py-3.5 px-5 rounded-xl font-extrabold text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2"
+        >
+          <span id="fbBtnText">Submit 11-Question Feedback to EDHKN</span>
+          <span aria-hidden="true">✓</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- CONFIRMATION RECEIPT CARD (Shown after successful submission) -->
+    <div id="feedbackSuccessCard" class="hidden hw-card rounded-2xl p-6 sm:p-8 text-center">
+      <div class="w-14 h-14 rounded-2xl bg-emerald-100 border-2 border-emerald-700 text-emerald-800 flex items-center justify-center mx-auto mb-4 text-2xl font-extrabold">
+        ✓
+      </div>
+      <span class="text-[11px] font-mono font-bold uppercase tracking-widest text-teal-700">
+        Recorded in EDHKN Feedback Database
+      </span>
+      <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-950 mt-1 mb-2">
+        Thank You for Your Feedback!
+      </h2>
+      <p id="receiptSummary" class="text-xs sm:text-sm text-slate-600 max-w-md mx-auto leading-relaxed mb-6">
+        Your evaluation has been securely logged. We appreciate your contribution to Emergency &amp; Critical Care simulation training at Hospital Kuala Nerang.
+      </p>
+
+      <div class="flex flex-col sm:flex-row gap-3 justify-center">
+        <a
+          href="https://edhkn.github.io/ventilator/cockpit.html"
+          class="hw-btn-primary px-6 py-3 rounded-xl font-extrabold text-xs sm:text-sm uppercase tracking-wider inline-flex items-center justify-center gap-2"
+        >
+          <span>Return to Ventilator Cockpit</span>
+          <span aria-hidden="true">→</span>
+        </a>
+        <a
+          href="index.html"
+          class="px-5 py-3 rounded-xl font-bold text-xs sm:text-sm bg-white hover:bg-slate-100 text-slate-900 border-2 border-slate-900 transition-colors inline-flex items-center justify-center"
+        >
+          Back to Portal Home
+        </a>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Single-Line Portal Footer -->
+  <footer class="portal-footer">
+    <div class="footer-container">
+      <div class="footer-logos">
+        <img
+          src="https://lh3.googleusercontent.com/d/1O2Nj1Dr4U6wo7ISjdkDRukPYwZUkOOuJ"
+          onerror="this.onerror=null;this.src='https://placehold.co/68x68/0f172a/ffffff?text=HKN';"
+          alt="HKN Logo"
+        />
+        <div class="logo-divider"></div>
+        <img
+          src="https://lh3.googleusercontent.com/d/1LdMRx-PF49CWOcrjthClGLJg-yQoJ2mt"
+          onerror="this.onerror=null;this.src='https://placehold.co/68x68/0f766e/ffffff?text=MOH';"
+          alt="MOH Logo"
+        />
+      </div>
+      <div class="footer-status"><span class="pulse-dot"></span><span>EDHKN PORTAL Ver 2.0</span></div>
+      <p class="footer-copyright">© 2026 <span>Yassin Razak</span> | All Rights Reserved</p>
+    </div>
+  </footer>
+
+  <script>
+    // Must match the exact deployed Google Apps Script Web App URL used in index.html
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzn-A14BfqZgndzvk7GBxScFNzBPjVoXp9J5b7-KRMk-MvTQCZMl6vkxshHoh9RsrY/exec';
+
+    // 7 Quantitative Likert Questions (Q1–Q7)
+    const LIKERT_QUESTIONS = [
+      {
+        id: 'q1_waveforms',
+        code: 'Q01',
+        title: 'Scalar Waveforms & Lung Mechanics Realism',
+        prompt: 'The real-time Pressure (Paw), Volume (Vt), and ECG scalar waveforms accurately reflected changes in compliance, resistance, and Auto-PEEP.',
+        lowLabel: '1 = Unrealistic',
+        highLabel: '5 = Highly Realistic'
+      },
+      {
+        id: 'q2_controls',
+        code: 'Q02',
+        title: 'Ventilator Controls & Mode Switching (VCV, PCV, CPAP, BiPAP)',
+        prompt: 'Starting from 0 (Nil) standby and manually adjusting Vt, RR, PEEP, IPAP, FiO₂, and I:E ratio felt intuitive and clinically authentic.',
+        lowLabel: '1 = Confusing',
+        highLabel: '5 = Very Intuitive'
+      },
+      {
+        id: 'q3_alarms',
+        code: 'Q03',
+        title: 'Automatic Ventilator Alarms (Ppeak, Pplat, Vt, Auto-PEEP, Low O₂)',
+        prompt: 'The visual and audio ventilator alarms promptly alerted me to dangerous airway pressures, air trapping, or hypoxemia.',
+        lowLabel: '1 = Unhelpful',
+        highLabel: '5 = Very Effective'
+      },
+      {
+        id: 'q4_guidance',
+        code: 'Q04',
+        title: 'Pre-Adjustment Pathophysiology & Clinical Guidelines',
+        prompt: 'The Clinical Guidelines library and Guidance & Hint modal helped me apply evidence-based protocols (e.g., ARDSNet PBW, permissive hypercapnia, NIV).',
+        lowLabel: '1 = Not Helpful',
+        highLabel: '5 = Very Helpful'
+      },
+      {
+        id: 'q5_debriefing',
+        code: 'Q05',
+        title: 'Complication Debriefing & Error Explanations',
+        prompt: 'When an incorrect setting caused barotrauma, tension pneumothorax, or arrest, the debriefing clearly explained the underlying physiological mechanism.',
+        lowLabel: '1 = Unclear',
+        highLabel: '5 = Crystal Clear'
+      },
+      {
+        id: 'q6_confidence',
+        code: 'Q06',
+        title: 'Bedside Clinical Confidence Gain',
+        prompt: 'Practicing with these 20 scenarios has increased my confidence in initiating and troubleshooting mechanical ventilation in real ED/ICU patients.',
+        lowLabel: '1 = No Change',
+        highLabel: '5 = Much More Confident'
+      },
+      {
+        id: 'q7_overall',
+        code: 'Q07',
+        title: 'Overall Educational Value & Simulator Quality',
+        prompt: 'Overall, how would you rate the EDHKN Mechanical Ventilator Cockpit as a clinical simulation and teaching tool?',
+        lowLabel: '1 = Poor',
+        highLabel: '5 = Excellent'
+      }
+    ];
+
+    const ratingsState = {
+      q1_waveforms: 5,
+      q2_controls: 5,
+      q3_alarms: 5,
+      q4_guidance: 5,
+      q5_debriefing: 5,
+      q6_confidence: 5,
+      q7_overall: 5
+    };
+
+    function renderLikertQuestions() {
+      const container = document.getElementById('likertQuestionsContainer');
+      if (!container) return;
+
+      container.innerHTML = LIKERT_QUESTIONS.map((q) => {
+        const currentVal = ratingsState[q.id];
+        const buttonsHtml = [1, 2, 3, 4, 5]
+          .map((num) => {
+            const isSelected = num === currentVal;
+            return `
+              <button
+                type="button"
+                data-qid="${q.id}"
+                data-score="${num}"
+                class="likert-btn py-2 rounded-lg border-2 font-mono font-extrabold text-xs sm:text-sm transition-all ${
+                  isSelected
+                    ? 'border-slate-900 bg-teal-700 text-white shadow-[2px_2px_0px_#0f172a]'
+                    : 'border-slate-300 bg-slate-50 hover:border-slate-900 text-slate-700'
+                }"
+              >
+                ${num} ★
+              </button>
+            `;
+          })
+          .join('');
+
+        return `
+          <div class="rounded-xl border border-slate-300 bg-white p-4">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+              <div class="text-xs sm:text-sm font-bold text-slate-950">
+                <span class="inline-block font-mono text-[11px] px-2 py-0.5 rounded bg-slate-900 text-white mr-1.5">${q.code}</span>
+                ${q.title}
+              </div>
+              <span id="badge-${q.id}" class="text-[11px] font-mono font-bold text-teal-700">
+                Selected: ${currentVal} / 5
+              </span>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed mb-3">${q.prompt}</p>
+            <div class="grid grid-cols-5 gap-1.5 sm:gap-2">
+              ${buttonsHtml}
+            </div>
+            <div class="flex justify-between text-[10px] font-mono text-slate-500 mt-1.5">
+              <span>${q.lowLabel}</span>
+              <span>${q.highLabel}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      // Pre-fill Name & Email if opened from the auto-generated email link (?name=...&email=...)
+      const params = new URLSearchParams(window.location.search);
+      const urlName = params.get('name');
+      const urlEmail = params.get('email');
+      if (urlName) document.getElementById('fbName').value = urlName;
+      if (urlEmail) document.getElementById('fbEmail').value = urlEmail;
+
+      renderLikertQuestions();
+
+      // Delegated click handler for all Q1–Q7 Likert rating buttons
+      document.getElementById('likertQuestionsContainer').addEventListener('click', (e) => {
+        const btn = e.target.closest('.likert-btn');
+        if (!btn) return;
+        const qid = btn.getAttribute('data-qid');
+        const score = Number(btn.getAttribute('data-score'));
+        ratingsState[qid] = score;
+        renderLikertQuestions();
+      });
+
+      // Handle 11-Question Feedback Submission
+      document.getElementById('feedbackForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const name = document.getElementById('fbName').value.trim();
+        const email = document.getElementById('fbEmail').value.trim();
+        const role = document.getElementById('fbRole').value;
+        const department = document.getElementById('fbDepartment').value.trim();
+        const scenario = document.getElementById('fbScenario').value;
+        const trainingLevel = document.getElementById('fbTrainingLevel').value;
+        const keyTakeaway = document.getElementById('fbKeyTakeaway').value.trim();
+        const comments = document.getElementById('fbComments').value.trim();
+
+        const errorBox = document.getElementById('fbErrorBox');
+        const submitBtn = document.getElementById('fbSubmitBtn');
+        const btnText = document.getElementById('fbBtnText');
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        errorBox.classList.add('hidden');
+
+        if (name.length < 2) {
+          errorBox.textContent = 'Please enter your full name.';
+          errorBox.classList.remove('hidden');
+          document.getElementById('fbName').focus();
+          return;
+        }
+        if (!emailRegex.test(email)) {
+          errorBox.textContent = 'Please enter a valid email address.';
+          errorBox.classList.remove('hidden');
+          document.getElementById('fbEmail').focus();
+          return;
+        }
+        if (keyTakeaway.length < 3) {
+          errorBox.textContent = 'Please answer Question 10 (key clinical pearl or physiological concept learned).';
+          errorBox.classList.remove('hidden');
+          document.getElementById('fbKeyTakeaway').focus();
+          return;
+        }
+        if (comments.length < 3) {
+          errorBox.textContent = 'Please answer Question 11 (suggestions or requested scenarios) before submitting.';
+          errorBox.classList.remove('hidden');
+          document.getElementById('fbComments').focus();
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-75', 'cursor-wait');
+        btnText.textContent = 'Submitting 11-Question...';
+
+        try {
+          if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.startsWith('PASTE_')) {
+            const res = await fetch(APPS_SCRIPT_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify({
+                action: 'feedback',
+                name: name,
+                email: email,
+                role: role,
+                department: department,
+                q1_waveforms: ratingsState.q1_waveforms,
+                q2_controls: ratingsState.q2_controls,
+                q3_alarms: ratingsState.q3_alarms,
+                q4_guidance: ratingsState.q4_guidance,
+                q5_debriefing: ratingsState.q5_debriefing,
+                q6_confidence: ratingsState.q6_confidence,
+                rating: ratingsState.q7_overall,
+                scenario: scenario,
+                trainingLevel: trainingLevel,
+                keyTakeaway: keyTakeaway,
+                comments: comments
+              })
+            });
+            const data = await res.json();
+            if (data && data.status === 'error') {
+              throw new Error(data.message || 'Submission failed.');
+            }
+          } else {
+            await new Promise((resolve) => setTimeout(resolve, 400));
+          }
+
+          const avgScore = (
+            (ratingsState.q1_waveforms +
+              ratingsState.q2_controls +
+              ratingsState.q3_alarms +
+              ratingsState.q4_guidance +
+              ratingsState.q5_debriefing +
+              ratingsState.q6_confidence +
+              ratingsState.q7_overall) /
+            7
+          ).toFixed(1);
+
+          document.getElementById('receiptSummary').textContent = `Thank you, ${name} (${email}). All 11 responses (mean evaluation score ${avgScore}/5.0) have been recorded in the EDHKN Ventilator Cockpit Feedback.`;
+          document.getElementById('feedbackFormCard').classList.add('hidden');
+          document.getElementById('feedbackSuccessCard').classList.remove('hidden');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (err) {
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('opacity-75', 'cursor-wait');
+          btnText.textContent = 'Submit 11-Question Feedback to EDHKN';
+          errorBox.textContent = 'Unable to connect to EDHKN Portal. Please check your internet connection and try again.';
+          errorBox.classList.remove('hidden');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
