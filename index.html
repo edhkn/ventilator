@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mechanical Ventilator Cockpit — Interactive ICU &amp; ED Simulator | EDHKN</title>
+  <meta
+    name="description"
+    content="Interactive Mechanical Ventilator Cockpit Simulator for Emergency & Critical Care training. Test respiratory mechanics live and master VCV, PCV, CPAP, and BiPAP across 20 clinical scenarios."
+  />
+
+  <!-- Google Fonts: Plus Jakarta Sans & IBM Plex Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            mono: ['"IBM Plex Mono"', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    :root {
+      --chassis-bg: #f3f4f1;
+      --card-bg: #ffffff;
+      --ink-primary: #0f172a;
+      --ink-secondary: #475569;
+      --border-hard: #0f172a;
+      --accent-teal: #0f766e;
+      --accent-amber: #d97706;
+      --accent-crimson: #dc2626;
+    }
+
+    body {
+      background-color: var(--chassis-bg);
+      color: var(--ink-primary);
+    }
+
+    /* Tactile Hardware Card & Button Shadows */
+    .hw-card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--border-hard);
+      box-shadow: 4px 4px 0px #0f172a;
+    }
+
+    .hw-card-sm {
+      background: var(--card-bg);
+      border: 1.5px solid #cbd5e1;
+      transition: all 0.16s ease;
+    }
+
+    .hw-card-sm:hover {
+      border-color: #0f172a;
+      box-shadow: 3px 3px 0px #0f172a;
+      transform: translate(-1px, -1px);
+    }
+
+    .hw-btn-primary {
+      background: #0f172a;
+      color: #ffffff;
+      border: 1.5px solid #0f172a;
+      box-shadow: 4px 4px 0px #0f766e;
+      transition: all 0.15s ease;
+    }
+
+    .hw-btn-primary:hover {
+      background: #0f766e;
+      border-color: #0f172a;
+      box-shadow: 4px 4px 0px #0f172a;
+      transform: translate(-1px, -1px);
+    }
+
+    .hw-btn-primary:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0px #0f172a;
+    }
+
+    .hw-btn-secondary {
+      background: #ffffff;
+      color: #0f172a;
+      border: 1.5px solid #0f172a;
+      box-shadow: 3px 3px 0px #cbd5e1;
+      transition: all 0.15s ease;
+    }
+
+    .hw-btn-secondary:hover {
+      background: #f8fafc;
+      box-shadow: 3px 3px 0px #0f172a;
+      transform: translate(-1px, -1px);
+    }
+
+    /* Custom Tactile Range Sliders */
+    input[type='range'].clinical-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      background: #e2e8f0;
+      border: 1px solid #94a3b8;
+      border-radius: 999px;
+      outline: none;
+    }
+
+    input[type='range'].clinical-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #0f766e;
+      border: 2px solid #ffffff;
+      box-shadow: 0 0 0 1.5px #0f172a;
+      cursor: pointer;
+    }
+
+    input[type='range'].clinical-slider::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #0f766e;
+      border: 2px solid #ffffff;
+      box-shadow: 0 0 0 1.5px #0f172a;
+      cursor: pointer;
+    }
+
+    /* Floating Navigation Header (Hospital Kuala Nerang) */
+    nav.portal-nav {
+      position: sticky;
+      top: 12px;
+      z-index: 40;
+      max-width: 1080px;
+      margin: 12px auto 0;
+      width: calc(100% - 24px);
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(10px);
+      border-radius: 50px;
+      padding: 10px 22px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      border: 1.5px solid #0f172a;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: #2c3e50;
+      min-width: 0;
+    }
+
+    .dept-logo {
+      height: 44px !important;
+      width: auto !important;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      font-size: 1.05rem;
+      font-weight: 700;
+      line-height: 1.2;
+      display: flex;
+      flex-direction: column;
+      color: #2c3e50;
+    }
+
+    .logo-text span {
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: #64748b;
+    }
+
+    /* Single-Line Portal Footer */
+    footer.portal-footer {
+      margin-top: auto;
+      background: #ffffff;
+      border-top: 1.5px solid #0f172a;
+      padding: 14px 20px;
+      width: 100%;
+    }
+
+    .footer-container {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: nowrap;
+    }
+
+    .footer-logos {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .footer-logos img {
+      height: 34px !important;
+      width: auto !important;
+      object-fit: contain;
+    }
+
+    .logo-divider {
+      width: 1px;
+      height: 22px;
+      background-color: #cbd5e1;
+    }
+
+    .footer-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #475569;
+      background: #e2e8f0;
+      padding: 4px 12px;
+      border-radius: 20px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background-color: #22c55e;
+      border-radius: 50%;
+      box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+      animation: portalPulse 1.8s infinite;
+    }
+
+    @keyframes portalPulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    }
+
+    .footer-copyright {
+      font-size: 0.82rem;
+      color: #64748b;
+      margin: 0;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .footer-copyright span {
+      color: #0f172a;
+      font-weight: 700;
+    }
+
+    @media (max-width: 768px) {
+      nav.portal-nav {
+        padding: 8px 14px;
+      }
+      .dept-logo {
+        height: 36px !important;
+      }
+      .logo-text {
+        font-size: 0.92rem;
+      }
+      .logo-text span {
+        font-size: 0.7rem;
+      }
+      .footer-container {
+        gap: 8px;
+      }
+      .footer-logos img {
+        height: 26px !important;
+      }
+      .footer-status, .footer-copyright {
+        font-size: 0.72rem;
+      }
+    }
+  </style>
+</head>
+<body class="font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- Floating Hospital Kuala Nerang Navigation Header -->
+  <nav class="portal-nav">
+    <a href="https://edhkn.github.io/ventilator/cockpit.html" class="logo-group">
+      <img
+        src="https://lh3.googleusercontent.com/d/1O2Nj1Dr4U6wo7ISjdkDRukPYwZUkOOuJ"
+        onerror="this.onerror=null;this.src='https://placehold.co/96x96/0f172a/ffffff?text=HKN';"
+        alt="Logo Jabatan Kecemasan & Trauma Hospital Kuala Nerang"
+        class="dept-logo"
+      />
+      <div class="logo-text">
+        Hospital Kuala Nerang
+        <span>Jabatan Kecemasan &amp; Trauma</span>
+      </div>
+    </a>
+
+    <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+      <a
+        href="#test-lung"
+        class="hidden md:inline-block text-xs font-bold text-slate-600 hover:text-slate-950 px-3 py-1.5 rounded-full transition-colors"
+      >
+        Test-Lung Bench
+      </a>
+      <a
+        href="#scenarios"
+        class="hidden md:inline-block text-xs font-bold text-slate-600 hover:text-slate-950 px-3 py-1.5 rounded-full transition-colors"
+      >
+        20 Cases
+      </a>
+      <a
+        href="https://edhkn.github.io/ventilator/cockpit.html"
+        class="inline-flex items-center gap-1.5 bg-slate-900 hover:bg-teal-700 text-white text-xs sm:text-sm font-bold px-4 py-2 rounded-full transition-colors"
+      >
+        <span>Launch Cockpit</span>
+        <span aria-hidden="true">→</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 pt-7 sm:pt-10 pb-14">
+
+    <!-- COMPACT HERO HEADER -->
+    <section class="mb-8 sm:mb-10">
+      <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+        <div class="max-w-2xl">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-white border border-slate-900 text-[11px] font-mono font-bold uppercase tracking-wider text-slate-900 mb-3">
+            <span class="w-2 h-2 rounded-full bg-teal-600"></span>
+            <span>EDHKN Critical Care Simulation Lab</span>
+          </div>
+          <h1 class="text-3xl sm:text-5xl font-extrabold text-slate-950 tracking-tight leading-[1.1] mb-3">
+            Mechanical Ventilator Cockpit
+          </h1>
+          <p class="text-slate-600 text-sm sm:text-base leading-relaxed">
+            A hands-on bedside simulator for Emergency &amp; ICU clinicians. Configure <strong class="text-slate-900">VCV, PCV, CPAP, and BiPAP</strong> from a clean <code class="font-mono text-xs bg-white px-1.5 py-0.5 rounded border border-slate-300">0 (Nil)</code> standby state, read live <strong class="text-slate-900">Paw &amp; Volume</strong> scalar waveforms, and manage <strong class="text-slate-900">20 graded clinical scenarios</strong> without risking real patients.
+          </p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+          <a
+            href="https://edhkn.github.io/ventilator/cockpit.html"
+            class="hw-btn-primary px-6 py-3.5 rounded-xl font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2"
+          >
+            <span>Open Full Cockpit</span>
+            <span aria-hidden="true">↗</span>
+          </a>
+          <a
+            href="#scenarios"
+            class="hw-btn-secondary px-5 py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+          >
+            <span>Explore 20 Cases</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- INTERACTIVE BEDSIDE TEST-LUNG BENCH -->
+    <section id="test-lung" class="mb-12">
+      <div class="hw-card rounded-2xl p-4 sm:p-6">
+        <!-- Bench Top Bar -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 mb-5 border-b border-slate-200">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-mono font-bold uppercase tracking-widest text-teal-700">
+                Interactive Sandbox
+              </span>
+              <span class="text-[11px] font-mono bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-300">
+                Try adjusting dials below
+              </span>
+            </div>
+            <h2 class="text-lg sm:text-xl font-extrabold text-slate-950 mt-0.5">
+              Bedside Test-Lung &amp; Scalar Waveform Bench
+            </h2>
+          </div>
+
+          <!-- Patient Lung Condition Switcher -->
+          <div class="flex flex-wrap items-center gap-1.5">
+            <span class="text-[11px] font-mono font-bold text-slate-500 uppercase mr-1">Lung Profile:</span>
+            <button
+              type="button"
+              data-lung="normal"
+              class="lung-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-white border border-slate-900 transition-colors"
+            >
+              Normal (70kg)
+            </button>
+            <button
+              type="button"
+              data-lung="ards"
+              class="lung-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-700 border border-slate-300 hover:border-slate-900 transition-colors"
+            >
+              Stiff ARDS
+            </button>
+            <button
+              type="button"
+              data-lung="asthma"
+              class="lung-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-700 border border-slate-300 hover:border-slate-900 transition-colors"
+            >
+              Severe Asthma
+            </button>
+          </div>
+        </div>
+
+        <!-- Bench Main Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+          <!-- Left: Interactive Controls (5 cols) -->
+          <div class="lg:col-span-5 flex flex-col justify-between gap-4">
+            <!-- Mode Selector -->
+            <div class="bg-slate-50 border border-slate-300 rounded-xl p-3">
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-[11px] font-mono font-bold uppercase text-slate-600">Ventilation Mode</span>
+                <span id="bench-mode-note" class="text-[11px] font-mono text-teal-700 font-semibold">Volume Control</span>
+              </div>
+              <div class="grid grid-cols-4 gap-1.5" id="bench-modes">
+                <button type="button" data-bmode="VCV" class="bmode-btn py-2 rounded-lg text-xs font-extrabold bg-teal-700 text-white border border-slate-900">VCV</button>
+                <button type="button" data-bmode="PCV" class="bmode-btn py-2 rounded-lg text-xs font-extrabold bg-white text-slate-700 border border-slate-300 hover:border-slate-900">PCV</button>
+                <button type="button" data-bmode="CPAP" class="bmode-btn py-2 rounded-lg text-xs font-extrabold bg-white text-slate-700 border border-slate-300 hover:border-slate-900">CPAP</button>
+                <button type="button" data-bmode="BiPAP" class="bmode-btn py-2 rounded-lg text-xs font-extrabold bg-white text-slate-700 border border-slate-300 hover:border-slate-900">BiPAP</button>
+              </div>
+            </div>
+
+            <!-- Interactive Sliders -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
+              <!-- Tidal Volume / IPAP -->
+              <div id="ctrl-vt-wrap" class="bg-white border border-slate-300 rounded-xl p-3">
+                <div class="flex justify-between items-baseline mb-1.5">
+                  <span id="ctrl-vt-label" class="text-xs font-bold uppercase text-slate-600">Tidal Volume (Vt)</span>
+                  <span id="ctrl-vt-val" class="font-mono font-bold text-sm text-slate-950">450 mL</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button type="button" id="vt-dec" class="w-7 h-7 rounded-md border border-slate-400 bg-slate-50 hover:bg-slate-200 font-bold text-sm">-</button>
+                  <input id="slider-vt" type="range" min="250" max="850" step="10" value="450" class="clinical-slider" />
+                  <button type="button" id="vt-inc" class="w-7 h-7 rounded-md border border-slate-400 bg-slate-50 hover:bg-slate-200 font-bold text-sm">+</button>
+                </div>
+              </div>
+
+              <!-- Respiratory Rate -->
+              <div id="ctrl-rr-wrap" class="bg-white border border-slate-300 rounded-xl p-3">
+                <div class="flex justify-between items-baseline mb-1.5">
+                  <span class="text-xs font-bold uppercase text-slate-600">Resp Rate (RR)</span>
+                  <span id="ctrl-rr-val" class="font-mono font-bold text-sm text-slate-950">14 bpm</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button type="button" id="rr-dec" class="w-7 h-7 rounded-md border border-slate-400 bg-slate-50 hover:bg-slate-200 font-bold text-sm">-</button>
+                  <input id="slider-rr" type="range" min="8" max="32" step="1" value="14" class="clinical-slider" />
+                  <button type="button" id="rr-inc" class="w-7 h-7 rounded-md border border-slate-400 bg-slate-50 hover:bg-slate-200 font-bold text-sm">+</button>
+                </div>
+              </div>
+
+              <!-- PEEP / EPAP / CPAP -->
+              <div class="bg-white border border-slate-300 rounded-xl p-3">
+                <div class="flex justify-between items-baseline mb-1.5">
+                  <span id="ctrl-peep-label" class="text-xs font-bold uppercase text-slate-600">PEEP</span>
+                  <span id="ctrl-peep-val" class="font-mono font-bold text-sm text-slate-950">6 cmH₂O</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button type="button" id="peep-dec" class="w-7 h-7 rounded-md border border-slate-400 bg-slate-50 hover:bg-slate-200 font-bold text-sm">-</button>
+                  <input id="slider-peep" type="range" min="0" max="20" step="1" value="6" class="clinical-slider" />
+                  <button type="button" id="peep-inc" class="w-7 h-7 rounded-md border border-slate-400 bg-slate-50 hover:bg-slate-200 font-bold text-sm">+</button>
+                </div>
+              </div>
+
+              <!-- FiO2 -->
+              <div class="bg-white border border-slate-300 rounded-xl p-3">
+                <div class="flex justify-between items-baseline mb-1.5">
+                  <span class="text-xs font-bold uppercase text-slate-600">FiO₂</span>
+                  <span id="ctrl-fio2-val" class="font-mono font-bold text-sm text-slate-950">40 %</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button type="button" id="fio2-dec" class="w-7 h-7 rounded-md border border-slate-400 bg-slate-50 hover:bg-slate-200 font-bold text-sm">-</button>
+                  <input id="slider-fio2" type="range" min="21" max="100" step="1" value="40" class="clinical-slider" />
+                  <button type="button" id="fio2-inc" class="w-7 h-7 rounded-md border border-slate-400 bg-slate-50 hover:bg-slate-200 font-bold text-sm">+</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Experiment Presets -->
+            <div class="flex flex-wrap items-center gap-2 pt-1">
+              <button
+                type="button"
+                id="preset-safe"
+                class="flex-1 py-2 px-3 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-600 text-xs font-bold transition-colors"
+              >
+                ✓ Safe Settings
+              </button>
+              <button
+                type="button"
+                id="preset-danger"
+                class="flex-1 py-2 px-3 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-900 border border-rose-600 text-xs font-bold transition-colors"
+              >
+                ⚠ Simulate Barotrauma
+              </button>
+            </div>
+          </div>
+
+          <!-- Right: Live Anatomical Lung Visual + Precision Scalar Screen (7 cols) -->
+          <div class="lg:col-span-7 flex flex-col gap-3">
+            <!-- Live Clinical Status Banner -->
+            <div
+              id="bench-status-banner"
+              class="rounded-xl px-3.5 py-2.5 border border-emerald-600 bg-emerald-50 text-emerald-950 flex flex-wrap items-center justify-between gap-2 text-xs font-mono font-semibold"
+            >
+              <span id="bench-status-text">● PHYSIOLOGICAL VENTILATION — ALVEOLI SAFE</span>
+              <span id="bench-vtpbw-badge" class="bg-white px-2 py-0.5 rounded border border-emerald-400 text-emerald-900">
+                6.4 mL/kg PBW
+              </span>
+            </div>
+
+            <!-- Split Visual: Anatomical Lung Model + Precision Oscilloscope -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 flex-1">
+              <!-- Animated SVG Test-Lung Chamber (4 cols) -->
+              <div class="sm:col-span-4 bg-slate-50 border border-slate-300 rounded-xl p-3 flex flex-col items-center justify-between">
+                <div class="w-full flex justify-between items-center text-[10px] font-mono font-bold text-slate-500 uppercase">
+                  <span>Test Lung</span>
+                  <span id="lung-phase-label" class="text-teal-700">INSP</span>
+                </div>
+
+                <!-- Dynamic SVG Lungs -->
+                <div class="my-2 w-full flex items-center justify-center">
+                  <svg viewBox="0 0 180 160" class="w-36 h-32 overflow-visible">
+                    <!-- Trachea & Bronchi -->
+                    <path
+                      d="M84 10 L84 55 L58 76 M96 10 L96 55 L122 76"
+                      fill="none"
+                      stroke="#334155"
+                      stroke-width="6"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <!-- Left & Right Lung Lobes Group (Animated Scale) -->
+                    <g id="svg-lung-lobes" style="transform-origin: 90px 85px; transition: transform 0.06s linear;">
+                      <!-- Right Lung -->
+                      <path
+                        id="lung-lobe-right"
+                        d="M78 52 C52 54, 26 84, 24 124 C23 140, 38 148, 62 144 C76 142, 81 132, 81 114 Z"
+                        fill="#fecdd3"
+                        stroke="#e11d48"
+                        stroke-width="2.5"
+                      />
+                      <!-- Left Lung -->
+                      <path
+                        id="lung-lobe-left"
+                        d="M102 52 C128 54, 154 84, 156 124 C157 140, 142 148, 118 144 C104 142, 99 132, 99 114 Z"
+                        fill="#fecdd3"
+                        stroke="#e11d48"
+                        stroke-width="2.5"
+                      />
+                    </g>
+                  </svg>
+                </div>
+
+                <div class="w-full text-center">
+                  <div id="lung-vol-live" class="font-mono font-extrabold text-sm text-slate-900">0 mL</div>
+                  <div class="text-[10px] font-mono text-slate-500">Instantaneous Volume</div>
+                </div>
+              </div>
+
+              <!-- High-Contrast Precision Oscilloscope Screen (8 cols) -->
+              <div class="sm:col-span-8 bg-slate-950 border-2 border-slate-900 rounded-xl p-3 flex flex-col justify-between text-slate-200">
+                <div class="flex justify-between items-center text-[10px] font-mono mb-1.5">
+                  <div class="flex items-center gap-3">
+                    <span class="text-amber-400 font-bold">● Paw (cmH₂O)</span>
+                    <span class="text-sky-400 font-bold">● Volume (mL)</span>
+                  </div>
+                  <span id="scope-autopeep" class="text-slate-400">Auto-PEEP: 0.0</span>
+                </div>
+
+                <div class="w-full h-40 bg-[#070b14] rounded-lg border border-slate-800 overflow-hidden relative">
+                  <canvas id="bench-canvas" class="w-full h-full block"></canvas>
+                </div>
+
+                <!-- Live Calculated Telemetry Strip -->
+                <div class="grid grid-cols-4 gap-2 mt-2.5 pt-2 border-t border-slate-800 font-mono">
+                  <div>
+                    <div class="text-[9px] text-slate-400 uppercase">Ppeak</div>
+                    <div id="out-ppeak" class="text-sm sm:text-base font-bold text-amber-400">19</div>
+                  </div>
+                  <div>
+                    <div class="text-[9px] text-slate-400 uppercase">Pplat</div>
+                    <div id="out-pplat" class="text-sm sm:text-base font-bold text-amber-300">14</div>
+                  </div>
+                  <div>
+                    <div class="text-[9px] text-slate-400 uppercase">Est. SpO₂</div>
+                    <div id="out-spo2" class="text-sm sm:text-base font-bold text-emerald-400">98%</div>
+                  </div>
+                  <div>
+                    <div class="text-[9px] text-slate-400 uppercase">Min Vent</div>
+                    <div id="out-ve" class="text-sm sm:text-base font-bold text-sky-400">6.3 L</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- INTERACTIVE 20-SCENARIO CLINICAL DOSSIER EXPLORER -->
+    <section id="scenarios">
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-5">
+        <div>
+          <span class="text-xs font-mono font-bold uppercase tracking-widest text-teal-700">
+            20 Graded Clinical Scenarios
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-950 mt-0.5">
+            Select a Case to Preview &amp; Launch
+          </h2>
+        </div>
+
+        <!-- Filter Pills & Randomizer -->
+        <div class="flex flex-wrap items-center gap-1.5" id="case-filter-bar">
+          <button type="button" data-cfilter="all" class="cfilter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-white border border-slate-900">
+            All (20)
+          </button>
+          <button type="button" data-cfilter="core" class="cfilter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-700 border border-slate-300 hover:border-slate-900">
+            Core (1–10)
+          </button>
+          <button type="button" data-cfilter="advanced" class="cfilter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-700 border border-slate-300 hover:border-slate-900">
+            Advanced (11–20)
+          </button>
+          <button type="button" data-cfilter="niv" class="cfilter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-700 border border-slate-300 hover:border-slate-900">
+            CPAP / BiPAP
+          </button>
+          <button
+            type="button"
+            id="btn-random-case"
+            class="px-3 py-1.5 rounded-lg text-xs font-extrabold bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-600 transition-colors"
+          >
+            🎲 Random Case
+          </button>
+        </div>
+      </div>
+
+      <!-- Active Selected Case Dossier Card -->
+      <div id="selected-case-dossier" class="hw-card rounded-2xl p-4 sm:p-5 mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="flex-1">
+          <div class="flex flex-wrap items-center gap-2 mb-1.5">
+            <span id="dossier-badge" class="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded bg-slate-900 text-white">
+              CASE 01 • CORE ICU
+            </span>
+            <span id="dossier-mode" class="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded bg-teal-50 text-teal-800 border border-teal-600">
+              RECOMMENDED: VCV / PCV
+            </span>
+            <span id="dossier-pbw" class="text-[11px] font-mono text-slate-500 font-semibold">
+              PBW: 70 kg
+            </span>
+          </div>
+          <h3 id="dossier-title" class="text-lg sm:text-xl font-extrabold text-slate-950 mb-1">
+            Scenario 1: Severe ARDS (70kg Male)
+          </h3>
+          <p id="dossier-summary" class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+            Intubated for severe viral pneumonia with stiff, non-compliant lungs and profound hypoxemia (SpO₂ 80%). Apply ARDSNet 6 mL/kg PBW lung-protective tidal volumes and higher PEEP recruitment.
+          </p>
+        </div>
+
+        <a
+          href="https://edhkn.github.io/ventilator/cockpit.html"
+          class="hw-btn-primary w-full md:w-auto px-5 py-3 rounded-xl font-extrabold text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shrink-0"
+        >
+          <span>Launch in Cockpit</span>
+          <span aria-hidden="true">→</span>
+        </a>
+      </div>
+
+      <!-- Compact 20-Case Grid -->
+      <div id="cases-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"></div>
+    </section>
+
+  </main>
+
+  <!-- Single-Line Portal Footer (Matching EDHKN Portal) -->
+  <footer class="portal-footer">
+    <div class="footer-container">
+      <div class="footer-logos">
+        <img
+          src="https://lh3.googleusercontent.com/d/1O2Nj1Dr4U6wo7ISjdkDRukPYwZUkOOuJ"
+          onerror="this.onerror=null;this.src='https://placehold.co/68x68/0f172a/ffffff?text=HKN';"
+          alt="HKN Logo"
+        />
+        <div class="logo-divider"></div>
+        <img
+          src="https://lh3.googleusercontent.com/d/1LdMRx-PF49CWOcrjthClGLJg-yQoJ2mt"
+          onerror="this.onerror=null;this.src='https://placehold.co/68x68/0f766e/ffffff?text=MOH';"
+          alt="MOH Logo"
+        />
+      </div>
+      <div class="footer-status"><span class="pulse-dot"></span><span>EDHKN PORTAL Ver 2.0</span></div>
+      <p class="footer-copyright">© 2026 <span>Yassin Razak</span> | All Rights Reserved</p>
+    </div>
+  </footer>
+
+  <!-- INTERACTIVE BENCH & CASE EXPLORER SCRIPT -->
+  <script>
+    const COCKPIT_URL = 'https://edhkn.github.io/ventilator/cockpit.html';
+
+    // -------------------------------------------------------------------------
+    // 1. 20 CLINICAL SCENARIOS DATA
+    // -------------------------------------------------------------------------
+    const CASES = [
+      { id: 1, title: 'Severe ARDS (70kg Male)', pbw: '70 kg', tier: 'core', mode: 'VCV / PCV', summary: 'Severe viral pneumonia with stiff, non-compliant lungs (SpO₂ 80%). Requires ARDSNet 6 mL/kg PBW (~420 mL) and PEEP 10–16 cmH₂O to prevent volutrauma and recruit alveoli.' },
+      { id: 2, title: 'Status Asthmaticus (60kg Female)', pbw: '60 kg', tier: 'core', mode: 'VCV / PCV', summary: 'Life-threatening bronchospasm with elevated airway resistance (PIP 55 cmH₂O). Use low RR (10–14 bpm) and prolonged expiration (I:E 1:3–1:4) to prevent Auto-PEEP breath stacking.' },
+      { id: 3, title: 'Cardiogenic Pulmonary Edema', pbw: '75 kg', tier: 'core', mode: 'CPAP', summary: 'Alert patient in acute flash pulmonary edema (SpO₂ 81%, BP 165/95). First-line non-invasive CPAP (8–12 cmH₂O) recruits flooded alveoli and unloads the failing left ventricle.' },
+      { id: 4, title: 'Acute COPD Exacerbation', pbw: '68 kg', tier: 'core', mode: 'BiPAP', summary: 'Hypercapnic respiratory acidosis (pH 7.24, PaCO₂ 78 mmHg) in an arousable patient. BiPAP unloads fatigued muscles while controlled FiO₂ (28–45%) prevents CO₂ narcosis.' },
+      { id: 5, title: 'Opiate Overdose & Apnea', pbw: '80 kg', tier: 'core', mode: 'VCV / PCV', summary: 'Healthy lungs but zero central respiratory drive. Requires mandatory invasive minute ventilation (Vt 6–8 mL/kg, RR 12–16); CPAP is fatal due to apnea.' },
+      { id: 6, title: 'Traumatic Brain Injury (↑ICP)', pbw: '75 kg', tier: 'core', mode: 'VCV / PCV', summary: 'Severe TBI (GCS 6) with ICP 24 mmHg. Maintain strict normocapnia (PaCO₂ 35–40 mmHg) and low-moderate PEEP (5–8 cmH₂O) to preserve jugular venous outflow.' },
+      { id: 7, title: 'Guillain-Barré Paralysis', pbw: '65 kg', tier: 'core', mode: 'VCV / PCV', summary: 'Ascending neuromuscular diaphragmatic paralysis with normal lung parenchyma. Provide full physiological minute ventilation with lung-protective tidal volumes.' },
+      { id: 8, title: 'Post-Op OSA & Atelectasis', pbw: '75 kg (95kg Act)', tier: 'core', mode: 'CPAP', summary: 'Awake PACU patient with upper-airway obstruction and basilar atelectasis. CPAP (8–12 cmH₂O) acts as a pneumatic airway splint without re-intubation.' },
+      { id: 9, title: 'Unilateral Pneumonia Consolidation', pbw: '70 kg', tier: 'core', mode: 'VCV / PCV', summary: 'Dense left lung consolidation in septic shock. Low Vt (~6 mL/kg PBW) prevents overdistending the compliant healthy right lung.' },
+      { id: 10, title: 'Obesity Hypoventilation (OHS)', pbw: '60 kg (115kg Act)', tier: 'core', mode: 'BiPAP', summary: 'Decompensated hypercapnia (PaCO₂ 76 mmHg) with heavy chest-wall elastance. BiPAP with higher EPAP (7–10 cmH₂O) recruits bases while dosing by 60kg PBW.' },
+      { id: 11, title: 'Severe DKA with Kussmaul Breathing', pbw: '55 kg', tier: 'advanced', mode: 'VCV / PCV', summary: 'Profound metabolic acidosis (pH 6.94, PaCO₂ 16 mmHg). Match high pre-intubation minute ventilation (RR 22–30 bpm) to prevent pH crash and hyperkalemic arrest.' },
+      { id: 12, title: 'Post-ROSC Cardiac Arrest', pbw: '75 kg', tier: 'advanced', mode: 'VCV / PCV', summary: 'Post-VF arrest with myocardial stunning and mixed acidosis (pH 7.12, PaCO₂ 58). Target normocapnia and titrated normoxia (FiO₂ 40–70%) to prevent reperfusion injury.' },
+      { id: 13, title: 'Massive PE with RV Failure', pbw: '75 kg', tier: 'advanced', mode: 'VCV / PCV', summary: 'Obstructive shock (BP 82/48) and severe RV dilation. Keep PEEP low (3–6 cmH₂O) to avoid crushing RV afterload while increasing RR to overcome alveolar dead space.' },
+      { id: 14, title: 'Flail Chest & Pulmonary Contusion', pbw: '80 kg', tier: 'advanced', mode: 'VCV / PCV', summary: 'Blunt trauma with paradoxical rib segment and hemorrhagic contusion. PEEP 8–13 cmH₂O provides internal pneumatic stabilization alongside low Vt.' },
+      { id: 15, title: 'Paraquat Toxic Pneumonitis', pbw: '64 kg', tier: 'advanced', mode: 'VCV / PCV', summary: 'Toxicology trap: high FiO₂ (>45%) catalyzes superoxide free-radical lung destruction. Keep FiO₂ ≤ 40% (permissive hypoxemia) and use PEEP 10–15 cmH₂O.' },
+      { id: 16, title: 'Large Bronchopleural Fistula', pbw: '70 kg', tier: 'advanced', mode: 'PCV / VCV', summary: 'Necrotizing pneumonia losing ~35% Vt via chest-tube air leak. Minimize mean airway pressure (PEEP 3–6 cmH₂O, short Ti) and raise RR to offset leak.' },
+      { id: 17, title: 'Pregnancy ARDS (32 Weeks)', pbw: '52 kg (78kg Act)', tier: 'advanced', mode: 'VCV / PCV', summary: 'Dose Vt strictly by 52kg PBW (300–370 mL), maintain maternal SpO₂ ≥ 95%, and prevent fetal hypercapnic acidosis.' },
+      { id: 18, title: 'Grade IV Abdominal Compartment', pbw: '72 kg', tier: 'advanced', mode: 'VCV / PCV', summary: 'Intra-abdominal pressure 28 mmHg causing cephalad diaphragmatic splinting. PEEP 10–15 cmH₂O counterbalances IAP without collapsing IVC preload.' },
+      { id: 19, title: 'Smoke Inhalation & CO Poisoning', pbw: '75 kg', tier: 'advanced', mode: 'VCV / PCV', summary: 'COHb 28% (falsely normal pulse ox) + soot airway casts. Deliver 100% FiO₂ for CO washout while prolonging expiration (I:E 1:3–1:4) to prevent air trapping.' },
+      { id: 20, title: 'Bullous COPD + Pulm. Edema Overlap', pbw: '70 kg', tier: 'advanced', mode: 'BiPAP', summary: 'Dual cardiopulmonary crisis (pH 7.21, PaCO₂ 74, BP 168/98). Precision BiPAP (IPAP 14–20, EPAP 6–9, FiO₂ 35–55%) unloads LV edema while protecting apical bullae.' }
+    ];
+
+    // -------------------------------------------------------------------------
+    // 2. INTERACTIVE TEST-LUNG BENCH STATE & PHYSICS
+    // -------------------------------------------------------------------------
+    const bench = {
+      lung: 'normal', // 'normal' | 'ards' | 'asthma'
+      mode: 'VCV',    // 'VCV' | 'PCV' | 'CPAP' | 'BiPAP'
+      vt: 450,
+      ipap: 14,
+      rr: 14,
+      peep: 6,
+      fio2: 40
+    };
+
+    function computeBenchMechanics() {
+      const profiles = {
+        normal: { weight: 70, compliance: 60, resistance: 6, tauE: 0.45, baseSpo2: 92 },
+        ards: { weight: 70, compliance: 22, resistance: 8, tauE: 0.40, baseSpo2: 78 },
+        asthma: { weight: 60, compliance: 55, resistance: 24, tauE: 1.75, baseSpo2: 86 }
+      };
+      const p = profiles[bench.lung];
+      const isCpap = bench.mode === 'CPAP';
+      const isBipap = bench.mode === 'BiPAP';
+
+      const rr = isCpap ? 18 : bench.rr;
+      const cycleSec = 60 / rr;
+      const tiSec = cycleSec * 0.33;
+      const teSec = cycleSec - tiSec;
+
+      let effectiveVt = bench.vt;
+      if (isCpap) {
+        effectiveVt = Math.min(480, 240 + bench.peep * 20);
+      } else if (isBipap) {
+        const ps = Math.max(2, bench.ipap - bench.peep);
+        effectiveVt = Math.min(760, Math.round(ps * (p.compliance * 0.55) + 140));
+      }
+
+      const decay = Math.exp(-teSec / p.tauE);
+      const trappedVol = Math.min(320, Math.max(0, effectiveVt * (decay / (1 - decay))));
+      const autoPeep = trappedVol / p.compliance;
+      const totalPeep = bench.peep + autoPeep;
+
+      let pplat = 0;
+      let ppeak = 0;
+      if (isCpap) {
+        pplat = bench.peep;
+        ppeak = bench.peep;
+      } else if (isBipap) {
+        pplat = Math.max(bench.peep, bench.ipap);
+        ppeak = pplat;
+      } else {
+        pplat = Math.round(totalPeep + effectiveVt / p.compliance);
+        ppeak = bench.mode === 'PCV' ? pplat : Math.round(pplat + p.resistance);
+      }
+
+      const fio2Gain = (bench.fio2 - 21) * 0.32;
+      const peepGain = Math.min(9, bench.peep * 0.75);
+      const estSpo2 = Math.round(Math.min(100, Math.max(72, p.baseSpo2 + fio2Gain + peepGain - 6)));
+      const ve = ((effectiveVt * rr) / 1000).toFixed(1);
+      const vtPerKg = (effectiveVt / p.weight).toFixed(1);
+
+      const isBarotrauma = pplat > 30 || ppeak > 38 || effectiveVt > p.weight * 9;
+      const isAutoPeep = trappedVol > 50;
+      const isHypoxic = estSpo2 < 90;
+
+      return {
+        p,
+        isCpap,
+        isBipap,
+        rr,
+        cycleSec,
+        tiSec,
+        teSec,
+        tauE: p.tauE,
+        effectiveVt: Math.round(effectiveVt),
+        trappedVol: Math.round(trappedVol),
+        autoPeep: Number(autoPeep.toFixed(1)),
+        pplat,
+        ppeak,
+        estSpo2,
+        ve,
+        vtPerKg,
+        isBarotrauma,
+        isAutoPeep,
+        isHypoxic
+      };
+    }
+
+    function updateBenchUI() {
+      const m = computeBenchMechanics();
+
+      // Update Mode Buttons
+      document.querySelectorAll('.bmode-btn').forEach((btn) => {
+        const active = btn.getAttribute('data-bmode') === bench.mode;
+        btn.className = active
+          ? 'bmode-btn py-2 rounded-lg text-xs font-extrabold bg-teal-700 text-white border border-slate-900'
+          : 'bmode-btn py-2 rounded-lg text-xs font-extrabold bg-white text-slate-700 border border-slate-300 hover:border-slate-900';
+      });
+
+      const modeNotes = {
+        VCV: 'Volume Control (Constant Flow)',
+        PCV: 'Pressure Control (Square Paw)',
+        CPAP: 'Non-Invasive Constant Pressure',
+        BiPAP: 'Non-Invasive Bilevel Support'
+      };
+      document.getElementById('bench-mode-note').textContent = modeNotes[bench.mode];
+
+      // Update Lung Profile Buttons
+      document.querySelectorAll('.lung-btn').forEach((btn) => {
+        const active = btn.getAttribute('data-lung') === bench.lung;
+        btn.className = active
+          ? 'lung-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-white border border-slate-900 transition-colors'
+          : 'lung-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-700 border border-slate-300 hover:border-slate-900 transition-colors';
+      });
+
+      // Update Dial Labels & Values
+      const vtWrap = document.getElementById('ctrl-vt-wrap');
+      const rrWrap = document.getElementById('ctrl-rr-wrap');
+      const vtLabel = document.getElementById('ctrl-vt-label');
+      const vtVal = document.getElementById('ctrl-vt-val');
+      const sliderVt = document.getElementById('slider-vt');
+
+      if (m.isCpap) {
+        vtWrap.classList.add('opacity-45', 'pointer-events-none');
+        rrWrap.classList.add('opacity-45', 'pointer-events-none');
+        vtLabel.textContent = 'Tidal Volume (Spont)';
+        vtVal.textContent = `~${m.effectiveVt} mL`;
+      } else if (m.isBipap) {
+        vtWrap.classList.remove('opacity-45', 'pointer-events-none');
+        rrWrap.classList.remove('opacity-45', 'pointer-events-none');
+        vtLabel.textContent = 'IPAP Level';
+        sliderVt.min = 8;
+        sliderVt.max = 26;
+        sliderVt.step = 1;
+        sliderVt.value = bench.ipap;
+        vtVal.textContent = `${bench.ipap} cmH₂O`;
+      } else {
+        vtWrap.classList.remove('opacity-45', 'pointer-events-none');
+        rrWrap.classList.remove('opacity-45', 'pointer-events-none');
+        vtLabel.textContent = 'Tidal Volume (Vt)';
+        sliderVt.min = 250;
+        sliderVt.max = 850;
+        sliderVt.step = 10;
+        sliderVt.value = bench.vt;
+        vtVal.textContent = `${bench.vt} mL`;
+      }
+
+      document.getElementById('ctrl-rr-val').textContent = m.isCpap ? 'Spont (~18)' : `${bench.rr} bpm`;
+      document.getElementById('slider-rr').value = bench.rr;
+
+      document.getElementById('ctrl-peep-label').textContent = m.isCpap ? 'CPAP Pressure' : m.isBipap ? 'EPAP Level' : 'PEEP';
+      document.getElementById('ctrl-peep-val').textContent = `${bench.peep} cmH₂O`;
+      document.getElementById('slider-peep').value = bench.peep;
+
+      document.getElementById('ctrl-fio2-val').textContent = `${bench.fio2} %`;
+      document.getElementById('slider-fio2').value = bench.fio2;
+
+      // Update Telemetry Readouts
+      document.getElementById('out-ppeak').textContent = m.ppeak;
+      document.getElementById('out-ppeak').className = `text-sm sm:text-base font-bold ${m.ppeak > 38 ? 'text-rose-400' : 'text-amber-400'}`;
+
+      document.getElementById('out-pplat').textContent = m.pplat;
+      document.getElementById('out-pplat').className = `text-sm sm:text-base font-bold ${m.pplat > 30 ? 'text-rose-400' : 'text-amber-300'}`;
+
+      document.getElementById('out-spo2').textContent = `${m.estSpo2}%`;
+      document.getElementById('out-spo2').className = `text-sm sm:text-base font-bold ${m.isHypoxic ? 'text-rose-400' : 'text-emerald-400'}`;
+
+      document.getElementById('out-ve').textContent = `${m.ve} L`;
+      document.getElementById('scope-autopeep').textContent = `Auto-PEEP: +${m.autoPeep}`;
+      document.getElementById('scope-autopeep').className = m.isAutoPeep ? 'text-amber-400 font-bold' : 'text-slate-400';
+
+      // Status Banner & Lung SVG Colors
+      const banner = document.getElementById('bench-status-banner');
+      const statusText = document.getElementById('bench-status-text');
+      const badge = document.getElementById('bench-vtpbw-badge');
+      const lobeR = document.getElementById('lung-lobe-right');
+      const lobeL = document.getElementById('lung-lobe-left');
+
+      badge.textContent = `${m.vtPerKg} mL/kg PBW`;
+
+      if (m.isBarotrauma) {
+        banner.className = 'rounded-xl px-3.5 py-2.5 border border-rose-600 bg-rose-50 text-rose-950 flex flex-wrap items-center justify-between gap-2 text-xs font-mono font-bold';
+        statusText.textContent = `⚠ BAROTRAUMA RISK — Pplat ${m.pplat} cmH₂O (>30 LIMIT)`;
+        badge.className = 'bg-white px-2 py-0.5 rounded border border-rose-500 text-rose-900';
+        lobeR.setAttribute('fill', '#fca5a5');
+        lobeR.setAttribute('stroke', '#dc2626');
+        lobeL.setAttribute('fill', '#fca5a5');
+        lobeL.setAttribute('stroke', '#dc2626');
+      } else if (m.isAutoPeep) {
+        banner.className = 'rounded-xl px-3.5 py-2.5 border border-amber-600 bg-amber-50 text-amber-950 flex flex-wrap items-center justify-between gap-2 text-xs font-mono font-bold';
+        statusText.textContent = `⚠ AIR TRAPPING — AUTO-PEEP +${m.autoPeep} cmH₂O (LOWER RR)`;
+        badge.className = 'bg-white px-2 py-0.5 rounded border border-amber-500 text-amber-900';
+        lobeR.setAttribute('fill', '#fde68a');
+        lobeR.setAttribute('stroke', '#d97706');
+        lobeL.setAttribute('fill', '#fde68a');
+        lobeL.setAttribute('stroke', '#d97706');
+      } else if (m.isHypoxic) {
+        banner.className = 'rounded-xl px-3.5 py-2.5 border border-sky-600 bg-sky-50 text-sky-950 flex flex-wrap items-center justify-between gap-2 text-xs font-mono font-bold';
+        statusText.textContent = `⚠ HYPOXEMIA (SpO₂ ${m.estSpo2}%) — INCREASE FiO₂ OR PEEP`;
+        badge.className = 'bg-white px-2 py-0.5 rounded border border-sky-500 text-sky-900';
+        lobeR.setAttribute('fill', '#bae6fd');
+        lobeR.setAttribute('stroke', '#0284c7');
+        lobeL.setAttribute('fill', '#bae6fd');
+        lobeL.setAttribute('stroke', '#0284c7');
+      } else {
+        banner.className = 'rounded-xl px-3.5 py-2.5 border border-emerald-600 bg-emerald-50 text-emerald-950 flex flex-wrap items-center justify-between gap-2 text-xs font-mono font-semibold';
+        statusText.textContent = '● LUNG-PROTECTIVE VENTILATION — SAFE MECHANICS';
+        badge.className = 'bg-white px-2 py-0.5 rounded border border-emerald-400 text-emerald-900';
+        lobeR.setAttribute('fill', '#fecdd3');
+        lobeR.setAttribute('stroke', '#e11d48');
+        lobeL.setAttribute('fill', '#fecdd3');
+        lobeL.setAttribute('stroke', '#e11d48');
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // 3. REAL-TIME ANIMATION LOOP (SVG LUNG + CANVAS SCALARS)
+    // -------------------------------------------------------------------------
+    function startBenchLoop() {
+      const canvas = document.getElementById('bench-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const lungGroup = document.getElementById('svg-lung-lobes');
+      const lungPhaseEl = document.getElementById('lung-phase-label');
+      const lungVolEl = document.getElementById('lung-vol-live');
+
+      let xPos = 0;
+      let t = 0;
+      let prev = null;
+
+      const resize = () => {
+        const parent = canvas.parentElement;
+        if (!parent) return;
+        canvas.width = parent.clientWidth;
+        canvas.height = parent.clientHeight;
+        ctx.fillStyle = '#070b14';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        xPos = 0;
+        prev = null;
+      };
+
+      resize();
+      window.addEventListener('resize', resize);
+
+      const frame = () => {
+        const w = canvas.width;
+        const h = canvas.height;
+        if (w === 0 || h === 0) {
+          requestAnimationFrame(frame);
+          return;
+        }
+
+        const m = computeBenchMechanics();
+        const dt = 0.016;
+        const dx = (dt / 6.5) * w;
+        t += dt;
+
+        ctx.fillStyle = '#070b14';
+        ctx.fillRect(xPos, 0, Math.max(10, dx + 6), h);
+
+        // Divider line
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(xPos, h * 0.48);
+        ctx.lineTo(xPos + dx, h * 0.48);
+        ctx.stroke();
+
+        // 30 cmH2O dashed reference line
+        const pTop = h * 0.08;
+        const pBot = h * 0.44;
+        const y30 = pBot - (30 / 60) * (pBot - pTop);
+        ctx.save();
+        ctx.setLineDash([3, 3]);
+        ctx.strokeStyle = 'rgba(244, 63, 94, 0.4)';
+        ctx.beginPath();
+        ctx.moveTo(xPos, y30);
+        ctx.lineTo(xPos + dx, y30);
+        ctx.stroke();
+        ctx.restore();
+
+        const c = t % m.cycleSec;
+        const isInsp = c < m.tiSec;
+        let paw = bench.peep;
+        let vol = m.trappedVol;
+
+        if (isInsp) {
+          const u = c / m.tiSec;
+          if (m.isCpap) {
+            paw = Math.max(0, bench.peep - Math.sin(u * Math.PI) * 1.5);
+            vol = Math.sin((u * Math.PI) / 2) * m.effectiveVt;
+          } else if (bench.mode === 'PCV' || m.isBipap) {
+            paw = bench.peep + (m.ppeak - bench.peep) * Math.min(1, u / 0.1);
+            const norm = (1 - Math.exp(-4 * u)) / (1 - Math.exp(-4));
+            vol = m.trappedVol + m.effectiveVt * norm;
+          } else {
+            paw = u < 0.85 ? bench.peep + 4 + (m.ppeak - bench.peep - 4) * (u / 0.85) : m.pplat;
+            vol = m.trappedVol + m.effectiveVt * Math.min(1, u / 0.85);
+          }
+        } else {
+          const expT = c - m.tiSec;
+          const ef = Math.min(1, expT / Math.max(0.1, m.teSec));
+          if (m.isCpap) {
+            paw = bench.peep + Math.sin(ef * Math.PI) * 1.2;
+            vol = m.effectiveVt * Math.exp(-ef * 4.5);
+          } else {
+            paw = bench.peep + (m.pplat - bench.peep) * Math.exp(-ef * 5.2);
+            vol = (m.trappedVol + m.effectiveVt) * Math.exp(-expT / m.tauE);
+          }
+        }
+
+        // Animate SVG Lung Expansion
+        const scale = 0.84 + Math.min(0.38, (vol / 950) * 0.38);
+        if (lungGroup) {
+          lungGroup.style.transform = `scale(${scale.toFixed(3)})`;
+        }
+        if (lungPhaseEl) {
+          lungPhaseEl.textContent = isInsp ? 'INSP ▲' : 'EXP ▼';
+          lungPhaseEl.className = isInsp ? 'text-teal-700 font-bold' : 'text-slate-400';
+        }
+        if (lungVolEl) {
+          lungVolEl.textContent = `${Math.round(vol)} mL`;
+        }
+
+        const vTop = h * 0.56;
+        const vBot = h * 0.93;
+        const yP = pBot - (Math.min(60, Math.max(0, paw)) / 60) * (pBot - pTop);
+        const yV = vBot - (Math.min(1000, Math.max(0, vol)) / 1000) * (vBot - vTop);
+
+        if (prev && xPos > 0) {
+          ctx.strokeStyle = m.isBarotrauma ? '#fb7185' : '#facc15';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(prev.x, prev.yP);
+          ctx.lineTo(xPos, yP);
+          ctx.stroke();
+
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(prev.x, prev.yV);
+          ctx.lineTo(xPos, yV);
+          ctx.stroke();
+        }
+
+        prev = { x: xPos, yP, yV };
+        xPos += dx;
+        if (xPos >= w) {
+          xPos = 0;
+          prev = null;
+        }
+
+        requestAnimationFrame(frame);
+      };
+
+      requestAnimationFrame(frame);
+    }
+
+    // -------------------------------------------------------------------------
+    // 4. INTERACTIVE 20-SCENARIO DIRECTORY
+    // -------------------------------------------------------------------------
+    let selectedCaseId = 1;
+    let activeFilter = 'all';
+
+    function selectCase(id) {
+      selectedCaseId = id;
+      const c = CASES.find((item) => item.id === id) || CASES[0];
+
+      document.getElementById('dossier-badge').textContent = `CASE ${String(c.id).padStart(2, '0')} • ${
+        c.tier === 'advanced' ? 'ADVANCED CRITICAL CARE' : 'CORE ICU / ED'
+      }`;
+      document.getElementById('dossier-mode').textContent = `RECOMMENDED: ${c.mode}`;
+      document.getElementById('dossier-pbw').textContent = `PBW: ${c.pbw}`;
+      document.getElementById('dossier-title').textContent = `Scenario ${c.id}: ${c.title}`;
+      document.getElementById('dossier-summary').textContent = c.summary;
+
+      renderCasesGrid();
+    }
+
+    function renderCasesGrid() {
+      const grid = document.getElementById('cases-grid');
+      if (!grid) return;
+
+      const filtered = CASES.filter((c) => {
+        if (activeFilter === 'core') return c.tier === 'core';
+        if (activeFilter === 'advanced') return c.tier === 'advanced';
+        if (activeFilter === 'niv') return c.mode === 'CPAP' || c.mode === 'BiPAP';
+        return true;
+      });
+
+      grid.innerHTML = filtered
+        .map((c) => {
+          const isSelected = c.id === selectedCaseId;
+          return `
+            <button
+              type="button"
+              data-case-id="${c.id}"
+              class="case-tile text-left rounded-xl p-3.5 flex flex-col justify-between ${
+                isSelected
+                  ? 'bg-slate-900 text-white border-2 border-slate-900 shadow-[3px_3px_0px_#0f766e]'
+                  : 'hw-card-sm text-slate-900'
+              }"
+            >
+              <div>
+                <div class="flex items-center justify-between gap-1.5 mb-2">
+                  <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
+                    isSelected
+                      ? 'bg-teal-600 text-white'
+                      : c.tier === 'advanced'
+                      ? 'bg-rose-50 text-rose-800 border border-rose-300'
+                      : 'bg-slate-100 text-slate-700 border border-slate-300'
+                  }">
+                    #${String(c.id).padStart(2, '0')}
+                  </span>
+                  <span class="text-[10px] font-mono font-semibold ${isSelected ? 'text-teal-300' : 'text-teal-700'}">
+                    ${c.mode}
+                  </span>
+                </div>
+                <div class="text-xs sm:text-sm font-extrabold leading-snug mb-1">${c.title}</div>
+              </div>
+              <div class="mt-2 pt-2 border-t ${isSelected ? 'border-slate-700 text-slate-300' : 'border-slate-100 text-slate-500'} flex justify-between items-center text-[10px] font-mono">
+                <span>PBW ${c.pbw}</span>
+                <span>${isSelected ? 'Selected ●' : 'Preview'}</span>
+              </div>
+            </button>
+          `;
+        })
+        .join('');
+    }
+
+    // -------------------------------------------------------------------------
+    // 5. EVENT BINDINGS & INIT
+    // -------------------------------------------------------------------------
+    window.addEventListener('DOMContentLoaded', () => {
+      updateBenchUI();
+      startBenchLoop();
+      selectCase(1);
+
+      // Lung profile switcher
+      document.querySelectorAll('.lung-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          bench.lung = btn.getAttribute('data-lung');
+          if (bench.lung === 'ards') {
+            bench.mode = 'VCV';
+            bench.vt = 420;
+            bench.rr = 18;
+            bench.peep = 12;
+            bench.fio2 = 85;
+          } else if (bench.lung === 'asthma') {
+            bench.mode = 'VCV';
+            bench.vt = 440;
+            bench.rr = 12;
+            bench.peep = 5;
+            bench.fio2 = 45;
+          } else {
+            bench.mode = 'VCV';
+            bench.vt = 450;
+            bench.rr = 14;
+            bench.peep = 6;
+            bench.fio2 = 40;
+          }
+          updateBenchUI();
+        });
+      });
+
+      // Mode buttons
+      document.getElementById('bench-modes').addEventListener('click', (e) => {
+        const btn = e.target.closest('.bmode-btn');
+        if (!btn) return;
+        bench.mode = btn.getAttribute('data-bmode');
+        updateBenchUI();
+      });
+
+      // Sliders & +/- Step Buttons
+      const sliderVt = document.getElementById('slider-vt');
+      sliderVt.addEventListener('input', () => {
+        if (bench.mode === 'BiPAP') bench.ipap = Number(sliderVt.value);
+        else bench.vt = Number(sliderVt.value);
+        updateBenchUI();
+      });
+
+      document.getElementById('vt-dec').addEventListener('click', () => {
+        if (bench.mode === 'BiPAP') bench.ipap = Math.max(8, bench.ipap - 1);
+        else bench.vt = Math.max(250, bench.vt - 10);
+        updateBenchUI();
+      });
+      document.getElementById('vt-inc').addEventListener('click', () => {
+        if (bench.mode === 'BiPAP') bench.ipap = Math.min(26, bench.ipap + 1);
+        else bench.vt = Math.min(850, bench.vt + 10);
+        updateBenchUI();
+      });
+
+      const sliderRr = document.getElementById('slider-rr');
+      sliderRr.addEventListener('input', () => {
+        bench.rr = Number(sliderRr.value);
+        updateBenchUI();
+      });
+      document.getElementById('rr-dec').addEventListener('click', () => {
+        bench.rr = Math.max(8, bench.rr - 1);
+        updateBenchUI();
+      });
+      document.getElementById('rr-inc').addEventListener('click', () => {
+        bench.rr = Math.min(32, bench.rr + 1);
+        updateBenchUI();
+      });
+
+      const sliderPeep = document.getElementById('slider-peep');
+      sliderPeep.addEventListener('input', () => {
+        bench.peep = Number(sliderPeep.value);
+        updateBenchUI();
+      });
+      document.getElementById('peep-dec').addEventListener('click', () => {
+        bench.peep = Math.max(0, bench.peep - 1);
+        updateBenchUI();
+      });
+      document.getElementById('peep-inc').addEventListener('click', () => {
+        bench.peep = Math.min(20, bench.peep + 1);
+        updateBenchUI();
+      });
+
+      const sliderFio2 = document.getElementById('slider-fio2');
+      sliderFio2.addEventListener('input', () => {
+        bench.fio2 = Number(sliderFio2.value);
+        updateBenchUI();
+      });
+      document.getElementById('fio2-dec').addEventListener('click', () => {
+        bench.fio2 = Math.max(21, bench.fio2 - 5);
+        updateBenchUI();
+      });
+      document.getElementById('fio2-inc').addEventListener('click', () => {
+        bench.fio2 = Math.min(100, bench.fio2 + 5);
+        updateBenchUI();
+      });
+
+      // Experiment Presets
+      document.getElementById('preset-safe').addEventListener('click', () => {
+        bench.mode = 'VCV';
+        if (bench.lung === 'ards') {
+          bench.vt = 420;
+          bench.rr = 18;
+          bench.peep = 12;
+          bench.fio2 = 85;
+        } else if (bench.lung === 'asthma') {
+          bench.vt = 440;
+          bench.rr = 11;
+          bench.peep = 5;
+          bench.fio2 = 50;
+        } else {
+          bench.vt = 450;
+          bench.rr = 14;
+          bench.peep = 6;
+          bench.fio2 = 40;
+        }
+        updateBenchUI();
+      });
+
+      document.getElementById('preset-danger').addEventListener('click', () => {
+        bench.mode = 'VCV';
+        bench.vt = 800;
+        bench.rr = 28;
+        bench.peep = 16;
+        bench.fio2 = 40;
+        updateBenchUI();
+      });
+
+      // Case Filter & Randomizer
+      document.getElementById('case-filter-bar').addEventListener('click', (e) => {
+        const fBtn = e.target.closest('.cfilter-btn');
+        if (!fBtn) return;
+        activeFilter = fBtn.getAttribute('data-cfilter');
+
+        document.querySelectorAll('.cfilter-btn').forEach((b) => {
+          b.className = 'cfilter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-700 border border-slate-300 hover:border-slate-900';
+        });
+        fBtn.className = 'cfilter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-white border border-slate-900';
+
+        renderCasesGrid();
+      });
+
+      document.getElementById('btn-random-case').addEventListener('click', () => {
+        const randomIdx = Math.floor(Math.random() * CASES.length);
+        activeFilter = 'all';
+        document.querySelectorAll('.cfilter-btn').forEach((b) => {
+          b.className =
+            b.getAttribute('data-cfilter') === 'all'
+              ? 'cfilter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-white border border-slate-900'
+              : 'cfilter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-700 border border-slate-300 hover:border-slate-900';
+        });
+        selectCase(CASES[randomIdx].id);
+      });
+
+      document.getElementById('cases-grid').addEventListener('click', (e) => {
+        const tile = e.target.closest('.case-tile');
+        if (!tile) return;
+        selectCase(Number(tile.getAttribute('data-case-id')));
+      });
+    });
+  </script>
+</body>
+</html>
