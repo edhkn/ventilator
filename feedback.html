@@ -253,13 +253,6 @@
       >
         Portal Home
       </a>
-      <a
-        href="https://edhkn.github.io/ventilator/cockpit.html"
-        class="inline-flex items-center gap-1.5 bg-slate-900 hover:bg-teal-700 text-white text-xs sm:text-sm font-bold px-4 py-2 rounded-full transition-colors"
-      >
-        <span>Launch Cockpit</span>
-        <span aria-hidden="true">→</span>
-      </a>
     </div>
   </nav>
 
@@ -482,7 +475,7 @@
         ✓
       </div>
       <span class="text-[11px] font-mono font-bold uppercase tracking-widest text-teal-700">
-        Recorded in EDHKN Feedback Database
+        Recorded in EDHKN Portal Feedback
       </span>
       <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-950 mt-1 mb-2">
         Thank You for Your Feedback!
@@ -722,7 +715,7 @@
 
         submitBtn.disabled = true;
         submitBtn.classList.add('opacity-75', 'cursor-wait');
-        btnText.textContent = 'Submitting 11-Question...';
+        btnText.textContent = 'Submitting 11-Question Audit...';
 
         try {
           if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.startsWith('PASTE_')) {
@@ -775,7 +768,7 @@
           submitBtn.disabled = false;
           submitBtn.classList.remove('opacity-75', 'cursor-wait');
           btnText.textContent = 'Submit 11-Question Feedback to EDHKN';
-          errorBox.textContent = 'Unable to connect to EDHKN Portal. Please check your internet connection and try again.';
+          errorBox.textContent = 'Unable to connect to server. Please check your internet connection and try again.';
           errorBox.classList.remove('hidden');
         }
       });
