@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EDHKN Ventilator Cockpit — Clinical Simulator</title>
+  <title>Ventilator Cockpit — Clinical ICU Simulator</title>
 
   <!-- Google Fonts: Inter & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -259,7 +259,7 @@
           </span>
 
           <h1 id="header-title" class="text-base sm:text-xl font-bold text-white uppercase tracking-wider">
-            EDHKN Ventilator Cockpit
+            Ventilator Cockpit
           </h1>
 
           <!-- Guidelines Button -->
@@ -3118,139 +3118,97 @@
     // =========================================================================
     // 8. INITIALIZATION & EVENT LISTENERS
     // =========================================================================
-    // 3. WEB AUDIO API (ECG BEEP, EVALUATION CHIMES, AUTO-ALARM, FLATLINE)
-    // =========================================================================
-    let audioCtx = null;
-// ... existing code ... -->
-        osc.start(now);
-        osc.stop(now + 1.95);
-      } catch (e) {}
-    }
+    window.addEventListener('DOMContentLoaded', () => {
+      // Populate 10-scenario dropdown
+      const selectEl = document.getElementById('scenario-select');
+      SCENARIOS.forEach((s, idx) => {
+        const opt = document.createElement('option');
+        opt.value = String(idx);
+        opt.textContent = s.title;
+        selectEl.appendChild(opt);
+      });
 
-    // Harmonious ascending arpeggio chime when settings are fully correct (success)
-    function playSuccessChime() {
-      if (state.isMuted) return;
-      const ctx = ensureAudioContext();
-      if (!ctx) return;
+      selectEl.addEventListener('change', (e) => {
+        resetScenario(Number(e.target.value));
+      });
 
-      const trigger = () => {
-        try {
-          const now = ctx.currentTime;
-          // C5 -> E5 -> G5 -> C6 uplifting clinical stabilization chime
-          const notes = [523.25, 659.25, 783.99, 1046.5];
-          const offsets = [0, 0.09, 0.18, 0.28];
-          const durations = [0.24, 0.24, 0.26, 0.45];
+      document.getElementById('btn-reset-all').addEventListener('click', () => {
+        resetScenario(state.currentScenarioIndex);
+      });
 
-          notes.forEach((freq, idx) => {
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
+      document.getElementById('btn-fatal-retry').addEventListener('click', () => {
+        resetScenario(state.currentScenarioIndex);
+      });
 
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(freq, now + offsets[idx]);
+      document.getElementById('btn-fatal-report').addEventListener('click', () => {
+        showEvaluationModal(state.lastEvaluationReport);
+      });
 
-            gain.gain.setValueAtTime(0.0001, now + offsets[idx]);
-            gain.gain.exponentialRampToValueAtTime(0.11, now + offsets[idx] + 0.015);
-            gain.gain.exponentialRampToValueAtTime(0.0001, now + offsets[idx] + durations[idx]);
+      document.getElementById('btn-last-eval').addEventListener('click', () => {
+        showEvaluationModal(state.lastEvaluationReport);
+      });
 
-            osc.connect(gain);
-            gain.connect(ctx.destination);
+      document.getElementById('btn-guidelines').addEventListener('click', showGuidelinesModal);
+      document.getElementById('btn-hint').addEventListener('click', showHintModal);
+      document.getElementById('btn-modal-close-top').addEventListener('click', closeModal);
+      document.getElementById('btn-modal-close-bottom').addEventListener('click', closeModal);
 
-            osc.start(now + offsets[idx]);
-            osc.stop(now + offsets[idx] + durations[idx] + 0.02);
-          });
-        } catch (e) {}
-      };
-
-      if (ctx.state === 'suspended') {
-        ctx.resume().then(trigger).catch(() => {});
-      } else {
-        trigger();
-      }
-    }
-
-    // Distinct two-tone advisory chime when settings are partially correct (warning)
-    function playPartialWarningTone() {
-      if (state.isMuted) return;
-      const ctx = ensureAudioContext();
-      if (!ctx) return;
-
-      const trigger = () => {
-        try {
-          const now = ctx.currentTime;
-          // Two-note mid-register advisory chime (A4 -> F4) signaling partial stability / refinement needed
-          const notes = [440.0, 349.23];
-          const offsets = [0, 0.19];
-
-          notes.forEach((freq, idx) => {
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(freq, now + offsets[idx]);
-
-            gain.gain.setValueAtTime(0.0001, now + offsets[idx]);
-            gain.gain.exponentialRampToValueAtTime(0.095, now + offsets[idx] + 0.015);
-            gain.gain.exponentialRampToValueAtTime(0.0001, now + offsets[idx] + 0.24);
-
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-
-            osc.start(now + offsets[idx]);
-            osc.stop(now + offsets[idx] + 0.26);
-          });
-        } catch (e) {}
-      };
-
-      if (ctx.state === 'suspended') {
-        ctx.resume().then(trigger).catch(() => {});
-      } else {
-        trigger();
-      }
-    }
-
-    function playVentilatorAlarmBurst() {
-// ... existing code ... -->
-    function handleApplyEvaluation() {
-      if (state.status === 'fatal') return;
-      ensureAudioContext();
-
-      if (!state.settings.mode) {
-        state.status = 'warning';
-        state.statusMsg = 'Ventilator is in Standby (All settings at 0). Select a mode first.';
-        playPartialWarningTone();
+      document.getElementById('btn-audio-toggle').addEventListener('click', () => {
+        state.isMuted = !state.isMuted;
+        if (!state.isMuted) ensureAudioContext();
         renderUI();
-        showEvaluationModal({
-          status: 'warning',
-          title: 'Ventilator Settings Still at 0 (Nil)',
-          message:
-            'All settings reset to 0 when a scenario is loaded. Please choose a Ventilation Mode (VCV, PCV, CPAP, or BiPAP) and dial in your clinical parameters before applying.'
-        });
-        return;
-      }
+      });
 
-      const scenario = SCENARIOS[state.currentScenarioIndex];
-      const evaluation = scenario.evaluate(state.settings);
-      state.status = evaluation.status;
-      state.statusMsg = evaluation.msg;
+      // Mode buttons
+      document.getElementById('mode-buttons').addEventListener('click', (e) => {
+        const btn = e.target.closest('.mode-btn');
+        if (!btn || state.status === 'fatal') return;
+        const modeOption = btn.getAttribute('data-mode');
+        ensureAudioContext();
+        state.settings.mode = modeOption;
+        if ((modeOption === 'VCV' || modeOption === 'PCV') && !state.settings.ie) {
+          state.settings.ie = '1:2';
+        }
+        if (state.status !== 'idle') {
+          state.status = 'idle';
+          state.statusMsg = 'Mode selected. Adjust parameters and click "Apply & Evaluate".';
+        }
+        renderUI();
+      });
 
-      const report = {
-        status: evaluation.status,
-        title: evaluation.msg,
-        message: evaluation.feedback
-      };
-      state.lastEvaluationReport = report;
+      // Delegated events for dynamic dials & I:E select
+      const dialsContainer = document.getElementById('dynamic-dials');
 
-      if (evaluation.status === 'fatal') {
-        state.vitals = { spo2: 0, hr: 0, pip: 0, pplat: 0, bp: "0/0" };
-        playFlatlineTone();
-      } else if (evaluation.status === 'success') {
-        playSuccessChime();
-        const permissiveHypoxemiaIds = [4, 15, 20];
-        state.vitals = {
-// ... existing code ... -->
-          bp: "120/78"
-        };
-      } else {
-        playPartialWarningTone();
-        state.vitals = {
-// ... existing code ... -->
+      dialsContainer.addEventListener('click', (e) => {
+        const stepBtn = e.target.closest('[data-dial-step]');
+        if (!stepBtn || state.status === 'fatal') return;
+        const key = stepBtn.getAttribute('data-dial-key');
+        const delta = Number(stepBtn.getAttribute('data-dial-step'));
+        const min = Number(stepBtn.getAttribute('data-dial-min'));
+        const max = Number(stepBtn.getAttribute('data-dial-max'));
+        const nextVal = Math.min(max, Math.max(min, (state.settings[key] || 0) + delta));
+        updateSettingValue(key, nextVal);
+      });
+
+      dialsContainer.addEventListener('input', (e) => {
+        const rangeInput = e.target.closest('[data-dial-range]');
+        if (!rangeInput || state.status === 'fatal') return;
+        const key = rangeInput.getAttribute('data-dial-range');
+        updateSettingValue(key, Number(rangeInput.value));
+      });
+
+      dialsContainer.addEventListener('change', (e) => {
+        if (e.target && e.target.id === 'ie-select') {
+          updateSettingValue('ie', e.target.value);
+        }
+      });
+
+      document.getElementById('btn-apply').addEventListener('click', handleApplyEvaluation);
+
+      // Start initial render & waveform loop
+      resetScenario(0);
+      startWaveformLoop();
+    });
+  </script>
+</body>
+</html>
